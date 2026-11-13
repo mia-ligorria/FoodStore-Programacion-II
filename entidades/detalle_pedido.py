@@ -1,4 +1,6 @@
 from entidades.base import Base
+from excepciones.dato_invalido_error import DatoInvalidoError
+
 
 
 class DetallePedido(Base):
@@ -9,11 +11,28 @@ class DetallePedido(Base):
         cantidad: int,
         precio_unitario: float
     ) -> None:
+
+        if not isinstance(cantidad, int) or isinstance(cantidad, bool):
+            raise TypeError("La cantidad debe ser un número entero.")
+
+        if cantidad <= 0:
+            raise DatoInvalidoError(
+                "La cantidad debe ser mayor que cero."
+            )
+
+        if not isinstance(precio_unitario, (int, float)) or isinstance(precio_unitario, bool):
+            raise TypeError("El precio unitario debe ser numérico.")
+
+        if precio_unitario < 0:
+            raise DatoInvalidoError(
+                "El precio unitario no puede ser negativo."
+            )
+
         super().__init__()
 
         self.__producto = producto
         self.__cantidad = cantidad
-        self.__precio_unitario = precio_unitario
+        self.__precio_unitario = float(precio_unitario)
 
     @property
     def producto(self):
@@ -37,13 +56,13 @@ class DetallePedido(Base):
             f"Precio unitario: ${self.__precio_unitario:.2f} | "
             f"Subtotal: ${self.calcular_subtotal():.2f}"
         )
-
+    
 
     def incrementar_cantidad(self, cantidad: int) -> None:
         if not isinstance(cantidad, int) or isinstance(cantidad, bool):
             raise TypeError("La cantidad debe ser un número entero.")
 
         if cantidad <= 0:
-            raise ValueError("La cantidad debe ser mayor que cero.")
+            raise DatoInvalidoError("La cantidad debe ser mayor que cero.")
 
         self.__cantidad += cantidad

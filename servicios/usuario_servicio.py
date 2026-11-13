@@ -4,6 +4,7 @@ from excepciones.dato_invalido_error import DatoInvalidoError
 from excepciones.duplicado_error import DuplicadoError
 from excepciones.entidad_no_encontrada_error import EntidadNoEncontradaError
 from excepciones.credenciales_invalidas_error import CredencialesInvalidasError
+from excepciones.operacion_no_permitida_error import OperacionNoPermitidaError
 
 
 class UsuarioServicio:
@@ -78,8 +79,8 @@ class UsuarioServicio:
     ) -> Usuario:
 
         if usuario_sesion.rol != Rol.ADMIN:
-            raise DatoInvalidoError(
-            "No tenés permisos para editar usuarios."
+            raise OperacionNoPermitidaError(
+                "No tenés permisos para editar usuarios."
             )
 
         usuario = self.buscar_por_id(id_usuario)
@@ -120,12 +121,12 @@ class UsuarioServicio:
     ) -> None:
 
         if usuario_sesion.rol != Rol.ADMIN:
-            raise DatoInvalidoError(
+            raise OperacionNoPermitidaError(
                 "No tenés permisos para eliminar usuarios."
             )
 
         if usuario_sesion.id == id_usuario:
-            raise DatoInvalidoError(
+            raise OperacionNoPermitidaError(
                 "No podés eliminar tu propio usuario mientras tenés la sesión iniciada."
             )
 

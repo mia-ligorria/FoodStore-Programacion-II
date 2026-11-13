@@ -7,6 +7,9 @@ from entidades.detalle_pedido import DetallePedido
 from entidades.usuario import Usuario
 from enums.estado import Estado
 from enums.forma_pago import FormaPago
+from excepciones.dato_invalido_error import DatoInvalidoError
+from excepciones.operacion_no_permitida_error import OperacionNoPermitidaError
+from excepciones.stock_insuficiente_error import StockInsuficienteError
 
 
 class Pedido(Base, Calculable):
@@ -16,14 +19,30 @@ class Pedido(Base, Calculable):
         usuario: Usuario,
         forma_pago: FormaPago
     ) -> None:
+
+        if not isinstance(usuario, Usuario):
+            raise DatoInvalidoError(
+                "El pedido debe estar asociado a un usuario válido."
+            )
+
+        if usuario.eliminado:
+            raise OperacionNoPermitidaError(
+                "No se puede crear un pedido para un usuario eliminado."
+            )
+
+        if not isinstance(forma_pago, FormaPago):
+            raise DatoInvalidoError(
+                "La forma de pago no es válida."
+            )
+
         super().__init__()
 
         self.__usuario = usuario
-        self.__detalles: list[DetallePedido] = []
+        self.__detalles = []
         self.__estado = Estado.PENDIENTE
         self.__forma_pago = forma_pago
         self.__fecha = date.today()
-        self.__total: float = 0.0
+        self.__total = 0.0
 
     @property
     def usuario(self) -> Usuario:
@@ -54,17 +73,23 @@ class Pedido(Base, Calculable):
         cantidad: int,
         producto
     ) -> None:
+
+        if self.__estado != Estado.PENDIENTE:
+            raise OperacionNoPermitidaError(
+                "Solo se pueden modificar pedidos pendientes."
+            )
+
         if not isinstance(cantidad, int) or isinstance(cantidad, bool):
             raise TypeError("La cantidad debe ser un número entero.")
 
         if cantidad <= 0:
-            raise ValueError("La cantidad debe ser mayor que cero.")
+            raise DatoInvalidoError("La cantidad debe ser mayor que cero.")
 
         if not producto.disponible:
-            raise ValueError("El producto no está disponible.")
+            raise OperacionNoPermitidaError("El producto no está disponible.")
 
         if producto.stock < cantidad:
-            raise ValueError("No hay stock suficiente.")
+            raise StockInsuficienteError("No hay stock suficiente.")
 
         detalle_existente = self.buscar_detalle_por_producto(producto)
 
@@ -81,6 +106,7 @@ class Pedido(Base, Calculable):
         producto.stock -= cantidad
         self.calcular_total()
 
+
     def buscar_detalle_por_producto(
         self,
         producto
@@ -93,6 +119,11 @@ class Pedido(Base, Calculable):
         return None
 
     def eliminar_detalle_por_producto(self, producto) -> None:
+        if self.__estado != Estado.PENDIENTE:
+            raise OperacionNoPermitidaError(
+                "Solo se pueden modificar pedidos pendientes."
+            )
+
         for detalle in self.__detalles:
             if detalle.producto == producto:
                 self.__detalles.remove(detalle)
@@ -118,8 +149,17 @@ class Pedido(Base, Calculable):
             Estado.CANCELADO: []
         }
 
+        if (
+            self.__estado == Estado.PENDIENTE
+            and nuevo_estado == Estado.CONFIRMADO
+            and not self.__detalles
+        ):
+            raise OperacionNoPermitidaError(
+                "No se puede confirmar un pedido sin productos."
+            )
+
         if nuevo_estado not in transiciones_permitidas[self.__estado]:
-            raise ValueError(
+            raise OperacionNoPermitidaError(
                 f"No se puede cambiar de {self.__estado.name} "
                 f"a {nuevo_estado.name}."
             )

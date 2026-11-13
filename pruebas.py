@@ -10,6 +10,7 @@ from excepciones.duplicado_error import DuplicadoError
 from excepciones.dato_invalido_error import DatoInvalidoError
 from excepciones.entidad_no_encontrada_error import EntidadNoEncontradaError
 from excepciones.credenciales_invalidas_error import CredencialesInvalidasError
+from excepciones.dato_invalido_error import DatoInvalidoError
 
 
 class EntidadPrueba(Base):
@@ -61,32 +62,40 @@ print("Contraseña correcta:", usuario.verificar_contrasenia("123456"))
 print("Contraseña incorrecta:", usuario.verificar_contrasenia("000000"))
 
 
+print("\n=== PRUEBA DE DETALLE PEDIDO ===")
 
-print("\n=== PRUEBA DE PEDIDO ===")
-
-pedido = Pedido(usuario, FormaPago.EFECTIVO)
-
-detalle1 = DetallePedido(
+detalle = DetallePedido(
     producto="Hamburguesa",
     cantidad=2,
     precio_unitario=5000
 )
 
-detalle2 = DetallePedido(
-    producto="Gaseosa",
-    cantidad=1,
-    precio_unitario=2000
-)
+print("Subtotal inicial:", detalle.calcular_subtotal())
 
-pedido.agregar_detalle(detalle1)
-pedido.agregar_detalle(detalle2)
+detalle.incrementar_cantidad(3)
+
+print("Cantidad actualizada:", detalle.cantidad)
+print("Subtotal actualizado:", detalle.calcular_subtotal())
+
+try:
+    detalle.incrementar_cantidad(0)
+except DatoInvalidoError as error:
+    print("Error esperado:", error)
+
+
+
+print("\n=== PRUEBA DE PEDIDO ===")
+
+pedido = Pedido(usuario, FormaPago.EFECTIVO)
+
+# Por ahora usamos productos simulados.
+# Cuando integremos Producto de Mia, usaremos instancias reales.
 
 print(pedido)
 print("Estado:", pedido.estado)
 print("Forma de pago:", pedido.forma_pago)
 print("Cantidad de detalles:", len(pedido.detalles))
-print("Total del pedido:", pedido.calcular_total())
-
+print("Total del pedido:", pedido.total)
 
 
 
