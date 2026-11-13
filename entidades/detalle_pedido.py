@@ -37,3 +37,13 @@ class DetallePedido(Base):
             f"Precio unitario: ${self.__precio_unitario:.2f} | "
             f"Subtotal: ${self.calcular_subtotal():.2f}"
         )
+
+
+    def incrementar_cantidad(self, cantidad: int) -> None:
+        if not isinstance(cantidad, int) or isinstance(cantidad, bool):
+            raise TypeError("La cantidad debe ser un número entero.")
+
+        if cantidad <= 0:
+            raise ValueError("La cantidad debe ser mayor que cero.")
+
+        self.__cantidad += cantidad
