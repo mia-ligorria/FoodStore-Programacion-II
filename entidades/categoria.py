@@ -4,6 +4,7 @@
 # ==================================================
 
 from entidades.base import Base
+from excepciones import DatoInvalidoError
 
 class Categoria(Base):
     def __init__(self, nombre: str, descripcion: str) -> None:
@@ -21,7 +22,7 @@ class Categoria(Base):
         if not isinstance(nombre, str):
             raise TypeError("El nombre debe ser un texto.")
         if not nombre.strip():
-            raise ValueError("El nombre no puede estar vacío.")
+            raise DatoInvalidoError("El nombre no puede estar vacío.")
 
         self.__nombre = nombre.strip()
 
@@ -34,7 +35,7 @@ class Categoria(Base):
         if not isinstance(descripcion, str):
             raise TypeError("La descripción debe ser un texto.")
         if not descripcion.strip():
-            raise ValueError("La descripción no puede estar vacía.")
+            raise DatoInvalidoError("La descripción no puede estar vacía.")
 
         self.__descripcion = descripcion.strip()
 

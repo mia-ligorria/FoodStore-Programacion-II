@@ -5,6 +5,7 @@
 
 from entidades.base import Base
 from entidades.categoria import Categoria
+from excepciones import DatoInvalidoError, PrecioInvalidoError
 
 class Producto(Base):
 
@@ -46,7 +47,7 @@ class Producto(Base):
         if not isinstance(nombre, str):
             raise TypeError("El nombre debe ser un texto.")
         if not nombre.strip():
-            raise ValueError("El nombre no puede estar vacío.")
+            raise DatoInvalidoError("El nombre no puede estar vacío.")
 
         self.__nombre = nombre.strip()
 
@@ -60,7 +61,7 @@ class Producto(Base):
         if not isinstance(precio, (int,float)) or isinstance(precio, bool):
             raise TypeError("El precio debe ser un número.")
         if precio < 0:
-            raise ValueError("El precio no puede ser negativo.")
+            raise PrecioInvalidoError("El precio no puede ser negativo.")
 
         self.__precio = precio
 
@@ -74,7 +75,7 @@ class Producto(Base):
         if not isinstance(descripcion, str):
             raise TypeError("La descripción debe ser un texto.")
         if not descripcion.strip():
-            raise ValueError("La descripción no puede estar vacía.")
+            raise DatoInvalidoError("La descripción no puede estar vacía.")
 
         self.__descripcion = descripcion.strip()
 
@@ -86,9 +87,9 @@ class Producto(Base):
     @stock.setter
     def stock(self, stock: int) -> None:
         if not isinstance(stock, int) or isinstance(stock, bool):
-            raise TypeError("El stock debe ser un número.")
+            raise TypeError("El stock debe ser un número entero.")
         if stock < 0:
-            raise ValueError("El stock no puede ser negativo.")
+            raise DatoInvalidoError("El stock no puede ser negativo.")
 
         self.__stock = stock
 
@@ -102,7 +103,7 @@ class Producto(Base):
         if not isinstance(imagen, str):
             raise TypeError("La imagen debe ser un texto.")
         if not imagen.strip():
-            raise ValueError("La imagen no puede estar vacía.")
+            raise DatoInvalidoError("La imagen no puede estar vacía.")
 
         self.__imagen = imagen.strip()
 
