@@ -1,5 +1,9 @@
-from abc import ABC, abstractmethod
+# ==================================================
+# Clase Calculable
+# Interfaz que define el cálculo del total de un pedido.
+# ==================================================
 
+from abc import ABC, abstractmethod
 
 class Calculable(ABC):
 

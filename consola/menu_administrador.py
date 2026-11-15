@@ -21,7 +21,6 @@ from consola.utilidades_consola import (
     pausar
 )
 
-
 class MenuAdministrador(Menu):
     def __init__(
         self,
@@ -32,7 +31,6 @@ class MenuAdministrador(Menu):
         super().__init__(usuario)
         self.__categoria_servicio: CategoriaServicio = categoria_servicio
         self.__producto_servicio: ProductoServicio = producto_servicio
-
 
 
 # MENU PRINCIPAL
@@ -70,8 +68,7 @@ class MenuAdministrador(Menu):
                 case "Salir":
                     return False
                 case None:
-                    continue
-
+                    return True
 
 
 # GESTIÓN DE CATEGORÍAS
@@ -110,7 +107,7 @@ class MenuAdministrador(Menu):
         if not categorias:
             mostrar_aviso("No hay categorías registradas.")
         else:
-            self._listar_categorias_sin_pausar()
+            self._listar_categorias_sin_pausar(categorias)
         pausar()
 
     def _crear_categoria(self) -> None:
@@ -145,7 +142,8 @@ class MenuAdministrador(Menu):
             mostrar_aviso("No hay categorías para editar.")
             pausar()
             return
-        self._listar_categorias_sin_pausar()
+
+        self._listar_categorias_sin_pausar(categorias)
         id_ingresado = questionary.text(
             "Ingresá el ID de la categoría:"
         ).ask()
@@ -194,7 +192,7 @@ class MenuAdministrador(Menu):
             mostrar_aviso("No hay categorías para eliminar.")
             pausar()
             return
-        self._listar_categorias_sin_pausar()
+        self._listar_categorias_sin_pausar(categorias)
 
         id_ingresado = questionary.text(
             "Ingresá el ID de la categoría:"
@@ -228,8 +226,11 @@ class MenuAdministrador(Menu):
             mostrar_error(str(error))
         pausar()
 
-    def _listar_categorias_sin_pausar(self) -> None:
-        categorias = self.__categoria_servicio.listar()
+    def _listar_categorias_sin_pausar(
+        self,
+        categorias: list[Categoria]
+    ) -> None:
+
         for categoria in categorias:
             print(
                 f"\nID: {categoria.id}"
@@ -237,7 +238,6 @@ class MenuAdministrador(Menu):
                 f"\nDescripción: {categoria.descripcion}"
             )
             print("-" * 50)
-
 
 
 # GESTIÓN DE PRODUCTOS
@@ -279,12 +279,15 @@ class MenuAdministrador(Menu):
         if not productos:
             mostrar_aviso("No hay productos registrados.")
         else:
-            self._mostrar_productos_sin_pausar()
+            self._mostrar_productos_sin_pausar(productos)
 
         pausar()
 
-    def _mostrar_productos_sin_pausar(self) -> None:
-        productos = self.__producto_servicio.listar()
+    def _mostrar_productos_sin_pausar(
+        self,
+        productos: list[Producto]
+    ) -> None:
+
         for producto in productos:
             print(
                 f"\nID: {producto.id}"
@@ -373,7 +376,7 @@ class MenuAdministrador(Menu):
             pausar()
             return
 
-        self._mostrar_productos_sin_pausar()
+        self._mostrar_productos_sin_pausar(productos)
 
         id_ingresado = questionary.text(
             "Ingresá el ID del producto:"
@@ -438,7 +441,6 @@ class MenuAdministrador(Menu):
                 return
             if nuevo_nombre.strip() == "":
                 nuevo_nombre = producto.nombre
-
             if nueva_descripcion.strip() == "":
                 nueva_descripcion = producto.descripcion
             if nuevo_precio.strip() == "":
@@ -475,7 +477,7 @@ class MenuAdministrador(Menu):
             mostrar_aviso("No hay productos para eliminar.")
             pausar()
             return
-        self._mostrar_productos_sin_pausar()
+        self._mostrar_productos_sin_pausar(productos)
 
         id_ingresado = questionary.text(
             "Ingresá el ID del producto:"
@@ -508,6 +510,9 @@ class MenuAdministrador(Menu):
 
         pausar()
 
+
+# SELECCIÓN DE CATEGORÍA
+
     def _seleccionar_categoria(
         self,
         categoria_actual: Categoria | None = None
@@ -520,8 +525,14 @@ class MenuAdministrador(Menu):
             pausar()
             return None
         opciones: list[str] = []
+        categoria_actual_activa = False
 
         if categoria_actual is not None:
+            for categoria in categorias:
+                if categoria.id == categoria_actual.id:
+                    categoria_actual_activa = True
+                    break
+        if categoria_actual_activa:
             opciones.append("Mantener categoría actual")
 
         for categoria in categorias:

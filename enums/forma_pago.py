@@ -1,3 +1,8 @@
+# ==================================================
+# Clase FormaPago
+# Define los medios de pago disponibles en el sistema.
+# ==================================================
+
 from enum import Enum
 
 

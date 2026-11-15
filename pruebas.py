@@ -1,45 +1,68 @@
+# ==================================================
+# PRUEBAS DE INTEGRACIÓN - FOOD STORE
+# Programación II - UTN FRM
+# ==================================================
+
 from entidades.base import Base
+from entidades.categoria import Categoria
+from entidades.producto import Producto
+from entidades.usuario import Usuario
+from entidades.pedido import Pedido
+
 from enums.rol import Rol
 from enums.estado import Estado
 from enums.forma_pago import FormaPago
-from entidades.usuario import Usuario
-from entidades.pedido import Pedido
-from entidades.detalle_pedido import DetallePedido
-from servicios.usuario_servicio import UsuarioServicio
-from excepciones.duplicado_error import DuplicadoError
-from excepciones.dato_invalido_error import DatoInvalidoError
-from excepciones.entidad_no_encontrada_error import EntidadNoEncontradaError
-from excepciones.credenciales_invalidas_error import CredencialesInvalidasError
-from excepciones.dato_invalido_error import DatoInvalidoError
 
+from servicios.usuario_servicio import UsuarioServicio
+from servicios.categoria_servicio import CategoriaServicio
+from servicios.producto_servicio import ProductoServicio
+
+from excepciones import (
+    DuplicadoError, 
+    DatoInvalidoError,
+    EntidadNoEncontradaError,
+    CredencialesInvalidasError,
+    OperacionNoPermitidaError
+)
+
+
+# ENTIDAD AUXILIAR PARA PROBAR BASE
 
 class EntidadPrueba(Base):
+
     def __str__(self) -> str:
         return f"Entidad de prueba - ID: {self.id}"
 
 
-# Creo dos entidades
+# PRUEBA DE BASE
+
+print("\n=== PRUEBA DE BASE ===")
+
 entidad1 = EntidadPrueba()
 entidad2 = EntidadPrueba()
 
-print("=== PRUEBA DE BASE ===")
 print("ID entidad 1:", entidad1.id)
 print("ID entidad 2:", entidad2.id)
 
-# Pruebo comparación
 print("¿Son iguales?", entidad1 == entidad2)
 
-# Pruebo baja lógica
-entidad1.eliminar()
-print("¿Entidad 1 eliminada?", entidad1.eliminado)
+# Prueba de baja lógica mediante la propiedad.
 
-# Pruebo enumerados
+entidad1.eliminado = True
+
+print("¿Entidad 1 eliminada?:", entidad1.eliminado)
+
+
+# PRUEBA DE ENUMERADOS
+
 print("\n=== PRUEBA DE ENUMERADOS ===")
+
 print("Rol:", Rol.ADMIN)
 print("Estado:", Estado.PENDIENTE)
 print("Forma de pago:", FormaPago.EFECTIVO)
 
 
+# PRUEBA DE USUARIO
 
 print("\n=== PRUEBA DE USUARIO ===")
 
@@ -58,52 +81,208 @@ print("Nombre:", usuario.nombre)
 print("Mail:", usuario.mail)
 print("Celular:", usuario.celular)
 print("Rol:", usuario.rol)
-print("Contraseña correcta:", usuario.verificar_contrasenia("123456"))
-print("Contraseña incorrecta:", usuario.verificar_contrasenia("000000"))
 
-
-print("\n=== PRUEBA DE DETALLE PEDIDO ===")
-
-detalle = DetallePedido(
-    producto="Hamburguesa",
-    cantidad=2,
-    precio_unitario=5000
+print(
+    "Contraseña correcta:",
+    usuario.verificar_contrasenia("123456")
 )
 
-print("Subtotal inicial:", detalle.calcular_subtotal())
+print(
+    "Contraseña incorrecta:",
+    usuario.verificar_contrasenia("000000")
+)
 
-detalle.incrementar_cantidad(3)
 
-print("Cantidad actualizada:", detalle.cantidad)
-print("Subtotal actualizado:", detalle.calcular_subtotal())
+# PRUEBA DE CATEGORÍA Y PRODUCTO
 
+print("\n=== PRUEBA DE CATEGORÍA Y PRODUCTO ===")
+
+categoria = Categoria(
+    nombre="Comidas",
+    descripcion="Productos alimenticios"
+)
+
+producto = Producto(
+    nombre="Hamburguesa",
+    precio=5000,
+    descripcion="Hamburguesa clásica",
+    stock=10,
+    imagen="hamburguesa.png",
+    disponible=True,
+    categoria=categoria
+)
+
+# Creo los servicios y registro las entidades.
+
+categoria_servicio = CategoriaServicio()
+producto_servicio = ProductoServicio(categoria_servicio)
+
+categoria_servicio.agregar(categoria)
+producto_servicio.agregar(producto)
+
+print("Categoría:", categoria)
+print("Producto:", producto)
+
+print("Productos de la categoría:")
+
+for producto_categoria in categoria.productos:
+    print(producto_categoria)
+
+print("Cantidad de productos:", len(categoria.productos))
+
+# Compruebo que el producto también esté registrado en el servicio.
+
+print("Productos registrados en el servicio:", len(producto_servicio.listar()))
+
+
+# PRUEBAS DE CATEGORIA SERVICIO
+
+print("\n=== PRUEBAS DE CATEGORIA SERVICIO ===")
+
+# PRUEBA DE CATEGORÍA DUPLICADA
 try:
-    detalle.incrementar_cantidad(0)
-except DatoInvalidoError as error:
+    categoria_duplicada = Categoria(
+        nombre=" comidas ",
+        descripcion="Otra categoría"
+    )
+    categoria_servicio.agregar(categoria_duplicada)
+except DuplicadoError as error:
+    print("Error esperado:", error)
+
+
+# PRUEBA DE ELIMINACIÓN DE CATEGORÍA CON PRODUCTOS ACTIVOS
+try:
+    categoria_servicio.eliminar(
+        categoria.id,
+        producto_servicio
+    )
+except OperacionNoPermitidaError as error:
     print("Error esperado:", error)
 
 
 
-print("\n=== PRUEBA DE PEDIDO ===")
+# PRUEBAS DE PRODUCTO SERVICIO
+
+print("\n=== PRUEBAS DE PRODUCTO SERVICIO ===")
+
+# CREO DOS CATEGORÍAS NUEVAS
+categoria_bebidas = Categoria(
+    nombre="Bebidas",
+    descripcion="Bebidas y aguas"
+)
+
+categoria_almacen = Categoria(
+    nombre="Almacén",
+    descripcion="Productos de almacén"
+)
+
+categoria_servicio.agregar(categoria_bebidas)
+categoria_servicio.agregar(categoria_almacen)
+
+
+# CREO Y REGISTRO UN PRODUCTO
+agua = Producto(
+    nombre="Agua",
+    precio=1000,
+    descripcion="Agua mineral",
+    stock=10,
+    imagen="agua.png",
+    disponible=True,
+    categoria=categoria_bebidas
+)
+
+producto_servicio.agregar(agua)
+
+print("Producto creado:", agua.nombre)
+print("Productos en Bebidas:", len(categoria_bebidas.productos))
+
+# PRUEBA DE CAMBIO DE CATEGORÍA
+producto_servicio.editar(
+    agua.id,
+    "Agua mineral",
+    1500,
+    "Agua mineral sin gas",
+    12,
+    "agua.png",
+    True,
+    categoria_almacen
+)
+
+print("\nDespués de cambiar la categoría:")
+print("Nueva categoría:", agua.categoria.nombre)
+print("Productos en Bebidas:", len(categoria_bebidas.productos))
+print("Productos en Almacén:", len(categoria_almacen.productos))
+
+# PRUEBA DE ELIMINACIÓN LÓGICA DEL PRODUCTO
+producto_servicio.eliminar(agua.id)
+
+print("\nDespués de eliminar el producto:")
+print("¿Agua eliminada?:", agua.eliminado)
+print("Productos activos en el servicio:", len(producto_servicio.listar()))
+
+# PRUEBA DE ELIMINACIÓN DE CATEGORÍA SIN PRODUCTOS ACTIVOS
+categoria_servicio.eliminar(
+    categoria_bebidas.id,
+    producto_servicio
+)
+
+print("\n¿Categoría Bebidas eliminada?:", categoria_bebidas.eliminado)
+
+
+# PRUEBA DE PEDIDO Y DETALLE PEDIDO
+
+print("\n=== PRUEBA DE PEDIDO Y DETALLE PEDIDO ===")
 
 pedido = Pedido(usuario, FormaPago.EFECTIVO)
 
-# Por ahora usamos productos simulados.
-# Cuando integremos Producto de Mia, usaremos instancias reales.
-
-print(pedido)
-print("Estado:", pedido.estado)
+print("Pedido creado:", pedido)
+print("Estado inicial:", pedido.estado)
 print("Forma de pago:", pedido.forma_pago)
+print("Cantidad inicial de detalles:", len(pedido.detalles))
+print("Total inicial:", pedido.total)
+
+# Agrego un producto al pedido.
+
+pedido.agregar_detalle(2, producto)
+
+print("\nDespués de agregar 2 hamburguesas:")
+
 print("Cantidad de detalles:", len(pedido.detalles))
-print("Total del pedido:", pedido.total)
+print("Cantidad del detalle:", pedido.detalles[0].cantidad)
+print("Subtotal:", pedido.detalles[0].subtotal)
+print("Total:", pedido.total)
+print("Stock restante:", producto.stock)
+
+# Agrego el mismo producto nuevamente.
+# El pedido debe incrementar la cantidad del detalle existente.
+
+pedido.agregar_detalle(3, producto)
+
+print("\nDespués de agregar otras 3 hamburguesas:")
+
+print("Cantidad de detalles:", len(pedido.detalles))
+print("Cantidad acumulada:", pedido.detalles[0].cantidad)
+print("Subtotal actualizado:", pedido.detalles[0].subtotal)
+print("Total actualizado:", pedido.total)
+print("Stock restante:", producto.stock)
+
+# Prueba de cantidad inválida.
+
+try:
+    pedido.agregar_detalle(0, producto)
+
+except (DatoInvalidoError, TypeError, ValueError) as error:
+    print("\nError esperado:", error)
 
 
+# PRUEBA DE USUARIO SERVICIO
 
 print("\n=== PRUEBA DE USUARIO SERVICIO ===")
 
 servicio_usuarios = UsuarioServicio()
 
-# Creo un administrador para realizar las operaciones
+# Creo un administrador para realizar las operaciones.
+
 admin_sesion = servicio_usuarios.crear_usuario(
     nombre="Romina",
     apellido="Castro",
@@ -113,7 +292,8 @@ admin_sesion = servicio_usuarios.crear_usuario(
     rol=Rol.ADMIN
 )
 
-# Creo usuario
+# Creo un usuario común.
+
 usuario_nuevo = servicio_usuarios.crear_usuario(
     nombre="Ana",
     apellido="Perez",
@@ -126,16 +306,30 @@ usuario_nuevo = servicio_usuarios.crear_usuario(
 print("Usuario creado:", usuario_nuevo)
 print("ID generado:", usuario_nuevo.id)
 
-# Listo usuarios
-print("\nListado de usuarios:")
-for usuario in servicio_usuarios.listar_usuarios():
-    print(usuario)
 
-# Busco por ID
-usuario_buscado = servicio_usuarios.buscar_por_id(usuario_nuevo.id)
-print("\nUsuario encontrado:", usuario_buscado)
+# LISTAR USUARIOS
 
-# Intento registrar un mail duplicado
+print("\n=== LISTADO DE USUARIOS ===")
+
+for usuario_listado in servicio_usuarios.listar_usuarios():
+    print(usuario_listado)
+
+
+# BUSCAR USUARIO
+
+print("\n=== BÚSQUEDA DE USUARIO ===")
+
+usuario_buscado = servicio_usuarios.buscar_por_id(
+    usuario_nuevo.id
+)
+
+print("Usuario encontrado:", usuario_buscado)
+
+
+# PRUEBA DE MAIL DUPLICADO
+
+print("\n=== PRUEBA DE MAIL DUPLICADO ===")
+
 try:
     servicio_usuarios.crear_usuario(
         nombre="Otro",
@@ -145,14 +339,15 @@ try:
         contrasenia="456789",
         rol=Rol.USUARIO
     )
+
 except DuplicadoError as error:
-    print("\nError esperado:", error)
+    print("Error esperado:", error)
 
 
+# PRUEBA DE EDICIÓN DE USUARIO
 
 print("\n=== PRUEBA DE EDICIÓN DE USUARIO ===")
 
-# Modifico usuario correctamente
 usuario_editado = servicio_usuarios.editar_usuario(
     usuario_sesion=admin_sesion,
     id_usuario=usuario_nuevo.id,
@@ -164,7 +359,9 @@ usuario_editado = servicio_usuarios.editar_usuario(
 
 print("Usuario editado:", usuario_editado)
 
-# Intento utilizar un mail duplicado
+
+# Intento utilizar un mail duplicado.
+
 try:
     servicio_usuarios.editar_usuario(
         usuario_sesion=admin_sesion,
@@ -174,10 +371,13 @@ try:
         mail="romina@gmail.com",
         celular="2994333333"
     )
+
 except DuplicadoError as error:
     print("Error esperado:", error)
 
-# Intento modificar un usuario inexistente
+
+# Intento modificar un usuario inexistente.
+
 try:
     servicio_usuarios.editar_usuario(
         usuario_sesion=admin_sesion,
@@ -187,13 +387,15 @@ try:
         mail="inexistente@gmail.com",
         celular="2994000000"
     )
+
 except EntidadNoEncontradaError as error:
     print("Error esperado:", error)
 
 
-    print("\n=== PRUEBA DE ELIMINACIÓN DE USUARIO ===")
+# PRUEBA DE ELIMINACIÓN DE USUARIO
 
-# Elimino usuario
+print("\n=== PRUEBA DE ELIMINACIÓN DE USUARIO ===")
+
 servicio_usuarios.eliminar_usuario(
     usuario_sesion=admin_sesion,
     id_usuario=usuario_nuevo.id
@@ -201,22 +403,25 @@ servicio_usuarios.eliminar_usuario(
 
 print("¿Usuario eliminado?:", usuario_nuevo.eliminado)
 
-# Compruebo que ya no aparece en el listado
 print("\nUsuarios activos:")
-for usuario in servicio_usuarios.listar_usuarios():
-    print(usuario)
 
-# Intento buscar el usuario eliminado
+for usuario_listado in servicio_usuarios.listar_usuarios():
+    print(usuario_listado)
+
+
+# Intento buscar el usuario eliminado.
+
 try:
     servicio_usuarios.buscar_por_id(usuario_nuevo.id)
+
 except EntidadNoEncontradaError as error:
     print("Error esperado:", error)
 
 
+# PRUEBA DE AUTENTICACIÓN
 
-    print("\n=== PRUEBA DE AUTENTICACIÓN ===")
+print("\n=== PRUEBA DE AUTENTICACIÓN ===")
 
-# Creo un usuario nuevo para probar el inicio de sesión
 usuario_login = servicio_usuarios.crear_usuario(
     nombre="Carlos",
     apellido="Lopez",
@@ -226,7 +431,8 @@ usuario_login = servicio_usuarios.crear_usuario(
     rol=Rol.USUARIO
 )
 
-# Intento iniciar sesión correctamente
+# Inicio de sesión correcto.
+
 usuario_autenticado = servicio_usuarios.autenticar(
     mail="carlos@gmail.com",
     contrasenia="clave123"
@@ -234,39 +440,55 @@ usuario_autenticado = servicio_usuarios.autenticar(
 
 print("Inicio de sesión correcto:", usuario_autenticado)
 
-# Intento iniciar sesión con contraseña incorrecta
+
+# Contraseña incorrecta.
+
 try:
     servicio_usuarios.autenticar(
         mail="carlos@gmail.com",
         contrasenia="incorrecta"
     )
+
 except CredencialesInvalidasError as error:
     print("Error esperado:", error)
 
-# Intento iniciar sesión con un mail inexistente
+
+# Mail inexistente.
+
 try:
     servicio_usuarios.autenticar(
         mail="noexiste@gmail.com",
         contrasenia="clave123"
     )
+
 except CredencialesInvalidasError as error:
     print("Error esperado:", error)
 
-# Intento iniciar sesión con un usuario eliminado
+
+# Usuario eliminado.
+
 try:
     servicio_usuarios.autenticar(
         mail="anamaria@gmail.com",
-        contrasenia="123456"
+        contrasenia="abc123"
     )
+
 except CredencialesInvalidasError as error:
     print("Error esperado:", error)
 
 
-# Intento eliminar al administrador que tiene la sesión iniciada
+# PRUEBA DE ELIMINACIÓN DEL ADMINISTRADOR EN SESIÓN
+
+print("\n=== PRUEBA DE ELIMINACIÓN DEL ADMINISTRADOR ===")
+
 try:
     servicio_usuarios.eliminar_usuario(
         usuario_sesion=admin_sesion,
         id_usuario=admin_sesion.id
     )
-except DatoInvalidoError as error:
-    print("\nError esperado:", error)
+except OperacionNoPermitidaError as e:
+    print("Error esperado:", e)
+
+# FIN DE LAS PRUEBAS
+
+print("\n=== FIN DE LAS PRUEBAS ===")

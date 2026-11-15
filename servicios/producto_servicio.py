@@ -6,7 +6,7 @@
 from entidades.producto import Producto
 from entidades.categoria import Categoria
 from servicios.categoria_servicio import CategoriaServicio
-from excepciones import EntidadNoEncontradaError
+from excepciones import EntidadNoEncontradaError, DatoInvalidoError, PrecioInvalidoError
 
 
 class ProductoServicio:
@@ -38,6 +38,7 @@ class ProductoServicio:
         if categoria is None or categoria.eliminado:
             raise EntidadNoEncontradaError(f"No existe una categoría activa con el ID {nvo_producto.categoria.id}.")
 
+        categoria.agregar_producto(nvo_producto)
         self.__productos.append(nvo_producto)
 
 
@@ -56,14 +57,41 @@ class ProductoServicio:
         producto = self.buscar_por_id(id)
 
         if producto is None or producto.eliminado:
-            raise EntidadNoEncontradaError(f"No existe un producto activo con el ID {id}.")
+            raise EntidadNoEncontradaError("Producto no encontrado.")
         if not isinstance(nva_categoria, Categoria):
-            raise TypeError("La categoría debe ser un objeto de tipo Categoria.")
+            raise TypeError("La categoría debe ser una instancia de Categoria.")
 
         categoria = self.__categoria_servicio.buscar_por_id(nva_categoria.id)
 
         if categoria is None or categoria.eliminado:
-            raise EntidadNoEncontradaError("La categoría no existe o está eliminada.")
+            raise EntidadNoEncontradaError("Categoría no encontrada o eliminada.")
+        if not isinstance(nvo_nombre, str):
+            raise TypeError("El nombre debe ser un texto.")
+        if not nvo_nombre.strip():
+            raise DatoInvalidoError("El nombre no puede estar vacío.")
+        if isinstance(nvo_precio, bool) or not isinstance(nvo_precio, (int, float)):
+            raise TypeError("El precio debe ser numérico.")
+        if nvo_precio < 0:
+            raise PrecioInvalidoError("El precio no puede ser negativo.")
+        if not isinstance(nva_descripcion, str):
+            raise TypeError("La descripción debe ser un texto.")
+        if not nva_descripcion.strip():
+            raise DatoInvalidoError("La descripción no puede estar vacía.")
+        if isinstance(nvo_stock, bool) or not isinstance(nvo_stock, int):
+            raise TypeError("El stock debe ser un número entero.")
+        if nvo_stock < 0:
+            raise DatoInvalidoError("El stock no puede ser negativo.")
+        if not isinstance(nva_imagen, str):
+            raise TypeError("La imagen debe ser un texto.")
+        if not nva_imagen.strip():
+            raise DatoInvalidoError("La imagen no puede estar vacía.")
+        if not isinstance(nva_disponible, bool):
+            raise TypeError("La disponibilidad debe ser un booleano.")
+
+        if producto.categoria != categoria:
+            producto.categoria.quitar_producto(producto)
+            producto.categoria = categoria
+            categoria.agregar_producto(producto)
 
         producto.nombre = nvo_nombre
         producto.precio = nvo_precio
@@ -71,8 +99,6 @@ class ProductoServicio:
         producto.stock = nvo_stock
         producto.imagen = nva_imagen
         producto.disponible = nva_disponible
-        producto.categoria = categoria
-
 
     def eliminar(self, id:int) -> None:
         producto = self.buscar_por_id(id)

@@ -1,10 +1,14 @@
+# ==================================================
+# Clase Usuario
+# Representa a un usuario del sistema y sus datos de acceso.
+# ==================================================
 
 from entidades.base import Base
 from enums.rol import Rol
+from excepciones import DatoInvalidoError
 
 
 class Usuario(Base):
-
     def __init__(
         self,
         nombre: str,
@@ -14,12 +18,18 @@ class Usuario(Base):
         contrasenia: str,
         rol: Rol
     ) -> None:
-        super().__init__()
 
-        self.__nombre: str = nombre
-        self.__apellido: str = apellido
-        self.__mail: str = mail
-        self.__celular: str = celular
+        if not isinstance(rol, Rol):
+            raise TypeError("El rol debe ser un valor válido de Rol.")
+        if not isinstance(contrasenia, str):
+            raise TypeError("La contraseña debe ser un texto.")
+        if not contrasenia.strip():
+            raise DatoInvalidoError("La contraseña no puede estar vacía.")
+        super().__init__()
+        self.nombre = nombre
+        self.apellido = apellido
+        self.mail = mail
+        self.celular = celular
         self.__contrasenia: str = contrasenia
         self.__rol: Rol = rol
 
@@ -29,7 +39,11 @@ class Usuario(Base):
 
     @nombre.setter
     def nombre(self, valor: str) -> None:
-        self.__nombre = valor
+        if not isinstance(valor, str):
+            raise TypeError("El nombre debe ser un texto.")
+        if not valor.strip():
+            raise DatoInvalidoError("El nombre no puede estar vacío.")
+        self.__nombre = valor.strip()
 
     @property
     def apellido(self) -> str:
@@ -37,7 +51,11 @@ class Usuario(Base):
 
     @apellido.setter
     def apellido(self, valor: str) -> None:
-        self.__apellido = valor
+        if not isinstance(valor, str):
+            raise TypeError("El apellido debe ser un texto.")
+        if not valor.strip():
+            raise DatoInvalidoError("El apellido no puede estar vacío.")
+        self.__apellido = valor.strip()
 
     @property
     def mail(self) -> str:
@@ -45,6 +63,13 @@ class Usuario(Base):
 
     @mail.setter
     def mail(self, valor: str) -> None:
+        if not isinstance(valor, str):
+            raise TypeError("El mail debe ser un texto.")
+        valor = valor.strip().lower()
+        if not valor:
+            raise DatoInvalidoError("El mail no puede estar vacío.")
+        if "@" not in valor or "." not in valor:
+            raise DatoInvalidoError("El formato del mail no es válido.")
         self.__mail = valor
 
     @property
@@ -53,7 +78,11 @@ class Usuario(Base):
 
     @celular.setter
     def celular(self, valor: str) -> None:
-        self.__celular = valor
+        if not isinstance(valor, str):
+            raise TypeError("El celular debe ser un texto.")
+        if not valor.strip():
+            raise DatoInvalidoError("El celular no puede estar vacío.")
+        self.__celular = valor.strip()
 
     @property
     def rol(self) -> Rol:

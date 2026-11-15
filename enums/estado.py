@@ -1,3 +1,8 @@
+# ==================================================
+# Clase Estado
+# Define los posibles estados de un pedido.
+# ==================================================
+
 from enum import Enum
 
 

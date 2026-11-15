@@ -1,14 +1,20 @@
+# ==================================================
+# Clase UsuarioServicio
+# Gestiona el registro, búsqueda, edición, eliminación
+# y autenticación de los usuarios del sistema.
+# ==================================================
+
 from entidades.usuario import Usuario
 from enums.rol import Rol
-from excepciones.dato_invalido_error import DatoInvalidoError
-from excepciones.duplicado_error import DuplicadoError
-from excepciones.entidad_no_encontrada_error import EntidadNoEncontradaError
-from excepciones.credenciales_invalidas_error import CredencialesInvalidasError
-from excepciones.operacion_no_permitida_error import OperacionNoPermitidaError
-
+from excepciones import (
+    DatoInvalidoError,
+    DuplicadoError,
+    EntidadNoEncontradaError,
+    CredencialesInvalidasError,
+    OperacionNoPermitidaError
+)
 
 class UsuarioServicio:
-
     def __init__(self) -> None:
         self.__usuarios: list[Usuario] = []
 
@@ -22,6 +28,20 @@ class UsuarioServicio:
         rol: Rol
     ) -> Usuario:
 
+        if not isinstance(nombre, str) or not isinstance(apellido, str):
+            raise TypeError("El nombre y el apellido deben ser textos.")
+
+        if not isinstance(mail, str):
+            raise TypeError("El mail debe ser un texto.")
+
+        if not isinstance(celular, str):
+            raise TypeError("El celular debe ser un texto.")
+
+        if not isinstance(contrasenia, str):
+            raise TypeError("La contraseña debe ser un texto.")
+        
+        mail = mail.strip().lower()
+
         if not nombre.strip() or not apellido.strip():
             raise DatoInvalidoError("El nombre y el apellido son obligatorios.")
 
@@ -29,15 +49,16 @@ class UsuarioServicio:
             raise DatoInvalidoError("El mail no tiene un formato válido.")
 
         if any(
-            usuario.mail.lower() == mail.lower()
+            usuario.mail == mail
             for usuario in self.__usuarios
+            if not usuario.eliminado
         ):
             raise DuplicadoError("Ya existe un usuario con ese mail.")
 
         if not celular.strip():
             raise DatoInvalidoError("El celular es obligatorio.")
 
-        if not contrasenia:
+        if not contrasenia.strip():
             raise DatoInvalidoError("La contraseña es obligatoria.")
 
         usuario = Usuario(
@@ -83,6 +104,18 @@ class UsuarioServicio:
                 "No tenés permisos para editar usuarios."
             )
 
+        if usuario_sesion.eliminado:
+            raise OperacionNoPermitidaError(
+                "Un usuario eliminado no puede realizar operaciones."
+            )
+        
+        if not isinstance(nombre, str) or not isinstance(apellido, str):
+            raise TypeError("El nombre y el apellido deben ser textos.")
+        if not isinstance(mail, str):
+            raise TypeError("El mail debe ser un texto.")
+        if not isinstance(celular, str):
+            raise TypeError("El celular debe ser un texto.")
+        
         usuario = self.buscar_por_id(id_usuario)
 
         if not nombre.strip() or not apellido.strip():
@@ -92,12 +125,13 @@ class UsuarioServicio:
 
         if not mail.strip() or "@" not in mail or "." not in mail:
             raise DatoInvalidoError("El mail no tiene un formato válido.")
+        mail = mail.strip().lower()
 
         for otro_usuario in self.__usuarios:
-            if (
+            if(
                 otro_usuario.id != id_usuario
                 and not otro_usuario.eliminado
-                and otro_usuario.mail.lower() == mail.lower()
+                and otro_usuario.mail == mail
             ):
                 raise DuplicadoError(
                     "Ya existe otro usuario con ese mail."
@@ -125,29 +159,34 @@ class UsuarioServicio:
                 "No tenés permisos para eliminar usuarios."
             )
 
+        if usuario_sesion.eliminado:
+            raise OperacionNoPermitidaError(
+                "Un usuario eliminado no puede realizar operaciones."
+            )
+
         if usuario_sesion.id == id_usuario:
             raise OperacionNoPermitidaError(
                 "No podés eliminar tu propio usuario mientras tenés la sesión iniciada."
             )
 
         usuario = self.buscar_por_id(id_usuario)
-        usuario.eliminar()
+        usuario.eliminado = True
 
 
-    def autenticar(
-        self,
-        mail: str,
-        contrasenia: str
-    ) -> Usuario:
+    def autenticar(self, mail: str, contrasenia: str) -> Usuario:
+        if not isinstance(mail, str) or not isinstance(contrasenia, str):
+            raise CredencialesInvalidasError(
+                "Mail o contraseña incorrectos."
+            )
+        mail = mail.strip().lower()
 
         for usuario in self.__usuarios:
             if (
-                usuario.mail.lower() == mail.lower()
+                usuario.mail == mail
                 and not usuario.eliminado
                 and usuario.verificar_contrasenia(contrasenia)
             ):
                 return usuario
-
         raise CredencialesInvalidasError(
             "Mail o contraseña incorrectos."
         )

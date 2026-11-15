@@ -63,7 +63,7 @@ class Producto(Base):
         if precio < 0:
             raise PrecioInvalidoError("El precio no puede ser negativo.")
 
-        self.__precio = precio
+        self.__precio = float(precio)
 
 
     @property
