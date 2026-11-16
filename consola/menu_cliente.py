@@ -57,7 +57,8 @@ class MenuCliente(Menu):
                 "Ver categorías",
                 "Ver productos disponibles",
                 "Mis pedidos",
-                "Cerrar sesión",
+                "Mis datos",
+                "Cerrar sesión",                
                 "Salir"
             ]
 
@@ -76,6 +77,9 @@ class MenuCliente(Menu):
 
                 case "Mis pedidos":
                     self._ver_mis_pedidos()
+
+                case "Mis datos":
+                    self._ver_mis_datos()
 
                 case "Cerrar sesión":
                     return True
@@ -176,5 +180,25 @@ class MenuCliente(Menu):
 
         except FoodStoreError as error:
             mostrar_error(str(error))
+
+        pausar()
+
+
+    # ==============================================
+    # CONSULTAR MIS DATOS
+    # ==============================================
+
+    def _ver_mis_datos(self) -> None:
+
+        limpiar_consola()
+        mostrar_titulo("MIS DATOS")
+
+        print(f"\nNombre: {self._usuario.nombre}")
+        print(f"Apellido: {self._usuario.apellido}")
+        print(f"Mail: {self._usuario.mail}")
+        print(f"Celular: {self._usuario.celular}")
+        print(f"Rol: {self._usuario.rol.name}")
+
+        print("-" * 50)
 
         pausar()

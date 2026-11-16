@@ -569,10 +569,210 @@ class MenuAdministrador(Menu):
 # GESTIÓN DE USUARIOS
 
     def _menu_usuarios(self) -> None:
-        self._mostrar_submenu(
-            "USUARIOS",
-            ["Listar", "Crear", "Editar", "Eliminar", "Volver"]
-        )
+        while True:
+            limpiar_consola()
+            mostrar_titulo("GESTIÓN DE USUARIOS")
+
+            opciones: list[str] = [
+                "Listar",
+                "Crear",
+                "Editar",
+                "Eliminar",
+                "Volver"
+            ]
+
+            seleccion = mostrar_menu(
+                "Seleccioná una operación:",
+                opciones
+            )
+
+            match seleccion:
+                case "Listar":
+                    self._listar_usuarios()
+                case "Crear":
+                    self._crear_usuario()
+                case "Editar":
+                    self._editar_usuario()
+                case "Eliminar":
+                    self._eliminar_usuario()
+                case None | "Volver":
+                    break
+
+
+
+    def _listar_usuarios(self) -> None:
+        limpiar_consola()
+        mostrar_titulo("LISTADO DE USUARIOS")
+
+        try:
+            usuarios = self.__usuario_servicio.listar_usuarios()
+
+            if not usuarios:
+                mostrar_aviso("No hay usuarios registrados.")
+            else:
+                for usuario in usuarios:
+                    print(
+                        f"\nID: {usuario.id}"
+                        f"\nNombre: {usuario.nombre}"
+                        f"\nApellido: {usuario.apellido}"
+                        f"\nMail: {usuario.mail}"
+                        f"\nRol: {usuario.rol.name}"
+                    )
+                    print("-" * 50)
+
+        except FoodStoreError as error:
+            mostrar_error(str(error))
+
+        pausar()
+
+
+    # ==============================================
+    # CREAR USUARIO
+    # ==============================================
+
+    def _crear_usuario(self) -> None:
+        limpiar_consola()
+        mostrar_titulo("CREAR USUARIO")
+
+        try:
+            nombre = input("Nombre: ").strip()
+            apellido = input("Apellido: ").strip()
+            mail = input("Correo electrónico: ").strip()
+            celular = input("Celular: ").strip()
+            contrasenia = input("Contraseña: ").strip()
+
+            print("\nSeleccioná el rol:")
+            roles = ["ADMIN", "USUARIO"]
+
+            seleccion_rol = questionary.select(
+                "Rol del usuario:",
+                choices=roles
+            ).ask()
+
+            if seleccion_rol is None:
+                mostrar_aviso("Operación cancelada.")
+                pausar()
+                return
+
+            from enums.rol import Rol
+
+            rol = Rol[seleccion_rol]
+
+            self.__usuario_servicio.crear_usuario(
+                nombre=nombre,
+                apellido=apellido,
+                mail=mail,
+                celular=celular,
+                contrasenia=contrasenia,
+                rol=rol
+            )
+
+            mostrar_exito("Usuario creado correctamente.")
+
+        except FoodStoreError as error:
+            mostrar_error(str(error))
+
+        except (ValueError, TypeError) as error:
+            mostrar_error(str(error))
+
+        pausar()
+
+
+    # ==============================================
+    # EDITAR USUARIO
+    # ==============================================
+
+    def _editar_usuario(self) -> None:
+        limpiar_consola()
+        mostrar_titulo("EDITAR USUARIO")
+
+        try:
+            usuarios = self.__usuario_servicio.listar_usuarios()
+
+            if not usuarios:
+                mostrar_aviso("No hay usuarios registrados.")
+                pausar()
+                return
+
+            self._listar_usuarios()
+
+            id_usuario = int(input("\nIngresá el ID del usuario a editar: "))
+
+            usuario = self.__usuario_servicio.buscar_por_id(id_usuario)
+
+            print("\nDejá vacío un campo si querés conservar el dato actual.")
+
+            nombre = input(f"Nombre [{usuario.nombre}]: ").strip()
+            apellido = input(f"Apellido [{usuario.apellido}]: ").strip()
+            mail = input(f"Mail [{usuario.mail}]: ").strip()
+            celular = input(f"Celular [{usuario.celular}]: ").strip()
+
+            self.__usuario_servicio.editar_usuario(
+                usuario_sesion=self.__usuario,
+                id_usuario=id_usuario,
+                nombre=nombre or usuario.nombre,
+                apellido=apellido or usuario.apellido,
+                mail=mail or usuario.mail,
+                celular=celular or usuario.celular
+            )
+
+            mostrar_exito("Usuario actualizado correctamente.")
+
+        except ValueError:
+            mostrar_error("El ID debe ser un número entero.")
+
+        except FoodStoreError as error:
+            mostrar_error(str(error))
+
+        pausar()
+
+
+        # ==============================================
+    # ELIMINAR USUARIO
+    # ==============================================
+
+    def _eliminar_usuario(self) -> None:
+        limpiar_consola()
+        mostrar_titulo("ELIMINAR USUARIO")
+
+        try:
+            usuarios = self.__usuario_servicio.listar_usuarios()
+
+            if not usuarios:
+                mostrar_aviso("No hay usuarios registrados.")
+                pausar()
+                return
+
+            self._listar_usuarios()
+
+            id_usuario = int(input("\nIngresá el ID del usuario a eliminar: "))
+
+            usuario = self.__usuario_servicio.buscar_por_id(id_usuario)
+
+            confirmar = questionary.confirm(
+                f"¿Estás seguro de eliminar a {usuario.nombre} "
+                f"{usuario.apellido}?"
+            ).ask()
+
+            if not confirmar:
+                mostrar_aviso("Operación cancelada.")
+                pausar()
+                return
+
+            self.__usuario_servicio.eliminar_usuario(
+                usuario_sesion=self.__usuario,
+                id_usuario=id_usuario
+            )
+
+            mostrar_exito("Usuario eliminado correctamente.")
+
+        except ValueError:
+            mostrar_error("El ID debe ser un número entero.")
+
+        except FoodStoreError as error:
+            mostrar_error(str(error))
+
+        pausar()
 
 
 # GESTIÓN DE PEDIDOS
@@ -602,11 +802,9 @@ class MenuAdministrador(Menu):
                 case "Crear":
                     self._crear_pedido()
                 case "Actualizar":
-                    mostrar_aviso("La opción Actualizar todavía no está implementada.")
-                    pausar()
+                    self._actualizar_pedido()
                 case "Eliminar":
-                    mostrar_aviso("La opción Eliminar todavía no está implementada.")
-                    pausar()
+                    self._eliminar_pedido()
                 case None | "Volver":
                     break
 
@@ -634,6 +832,137 @@ class MenuAdministrador(Menu):
                         f"\nTotal: ${pedido.total:.2f}"
                     )
                     print("-" * 50)
+
+        except FoodStoreError as error:
+            mostrar_error(str(error))
+
+        pausar()
+
+
+        # ==============================================
+    # ACTUALIZAR PEDIDO
+    # ==============================================
+
+    def _actualizar_pedido(self) -> None:
+        limpiar_consola()
+        mostrar_titulo("ACTUALIZAR PEDIDO")
+
+        try:
+            pedidos = self.__pedido_servicio.listar_pedidos(
+                self.__usuario
+            )
+
+            if not pedidos:
+                mostrar_aviso("No hay pedidos registrados.")
+                pausar()
+                return
+
+            self._listar_pedidos()
+
+            id_pedido = int(
+                input("\nIngresá el ID del pedido a actualizar: ")
+            )
+
+            pedido = self.__pedido_servicio.buscar_por_id(
+                self.__usuario,
+                id_pedido
+            )
+
+            print(f"\nPedido seleccionado: {pedido.id}")
+            print(f"Estado actual: {pedido.estado.name}")
+            print(f"Forma de pago actual: {pedido.forma_pago.name}")
+
+            # Seleccionar nuevo estado
+            nuevo_estado_nombre = questionary.select(
+                "Seleccioná el nuevo estado:",
+                choices=[estado.name for estado in Estado]
+            ).ask()
+
+            if nuevo_estado_nombre is None:
+                mostrar_aviso("Operación cancelada.")
+                pausar()
+                return
+
+            nuevo_estado = Estado[nuevo_estado_nombre]
+
+            # Seleccionar nueva forma de pago
+            nueva_forma_pago_nombre = questionary.select(
+                "Seleccioná la nueva forma de pago:",
+                choices=[forma.name for forma in FormaPago]
+            ).ask()
+
+            if nueva_forma_pago_nombre is None:
+                mostrar_aviso("Operación cancelada.")
+                pausar()
+                return
+
+            nueva_forma_pago = FormaPago[nueva_forma_pago_nombre]
+
+            self.__pedido_servicio.actualizar_pedido(
+                usuario_sesion=self.__usuario,
+                id_pedido=id_pedido,
+                nuevo_estado=nuevo_estado,
+                nueva_forma_pago=nueva_forma_pago
+            )
+
+            mostrar_exito("Pedido actualizado correctamente.")
+
+        except ValueError:
+            mostrar_error("El ID debe ser un número entero.")
+
+        except FoodStoreError as error:
+            mostrar_error(str(error))
+
+        pausar()
+
+
+        # ==============================================
+    # ELIMINAR PEDIDO
+    # ==============================================
+
+    def _eliminar_pedido(self) -> None:
+        limpiar_consola()
+        mostrar_titulo("ELIMINAR PEDIDO")
+
+        try:
+            pedidos = self.__pedido_servicio.listar_pedidos(
+                self.__usuario
+            )
+
+            if not pedidos:
+                mostrar_aviso("No hay pedidos registrados.")
+                pausar()
+                return
+
+            self._listar_pedidos()
+
+            id_pedido = int(
+                input("\nIngresá el ID del pedido a eliminar: ")
+            )
+
+            pedido = self.__pedido_servicio.buscar_por_id(
+                self.__usuario,
+                id_pedido
+            )
+
+            confirmar = questionary.confirm(
+                f"¿Estás seguro de eliminar el pedido {pedido.id}?"
+            ).ask()
+
+            if not confirmar:
+                mostrar_aviso("Operación cancelada.")
+                pausar()
+                return
+
+            self.__pedido_servicio.eliminar_pedido(
+                usuario_sesion=self.__usuario,
+                id_pedido=id_pedido
+            )
+
+            mostrar_exito("Pedido eliminado correctamente.")
+
+        except ValueError:
+            mostrar_error("El ID debe ser un número entero.")
 
         except FoodStoreError as error:
             mostrar_error(str(error))
