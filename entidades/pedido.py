@@ -1,19 +1,17 @@
-# ==================================================
-# Clase Pedido
-# Representa un pedido realizado por un usuario.
-# Administra sus detalles, estado y total.
-# ==================================================
 
 from datetime import date
+
 from entidades.base import Base
-from entidades.producto import Producto
 from entidades.calculable import Calculable
 from entidades.detalle_pedido import DetallePedido
 from entidades.usuario import Usuario
 from enums.estado import Estado
 from enums.forma_pago import FormaPago
-from excepciones import DatoInvalidoError, OperacionNoPermitidaError, StockInsuficienteError, EntidadNoEncontradaError
-
+from excepciones import (
+    DatoInvalidoError,
+    OperacionNoPermitidaError,
+    StockInsuficienteError
+)
 
 class Pedido(Base, Calculable):
 
@@ -24,7 +22,9 @@ class Pedido(Base, Calculable):
     ) -> None:
 
         if not isinstance(usuario, Usuario):
-            raise TypeError("El pedido debe estar asociado a un usuario válido.")
+            raise DatoInvalidoError(
+                "El pedido debe estar asociado a un usuario válido."
+            )
 
         if usuario.eliminado:
             raise OperacionNoPermitidaError(
@@ -32,7 +32,9 @@ class Pedido(Base, Calculable):
             )
 
         if not isinstance(forma_pago, FormaPago):
-            raise TypeError("La forma de pago no es válida.")
+            raise DatoInvalidoError(
+                "La forma de pago no es válida."
+            )
 
         super().__init__()
 
@@ -60,10 +62,13 @@ class Pedido(Base, Calculable):
         return self.__forma_pago
 
     @forma_pago.setter
-    def forma_pago(self, forma_pago: FormaPago) -> None:
-        if not isinstance(forma_pago, FormaPago):
-            raise TypeError("La forma de pago no es válida.")
-        self.__forma_pago = forma_pago
+    def forma_pago(self, valor: FormaPago) -> None:
+        if not isinstance(valor, FormaPago):
+            raise DatoInvalidoError(
+                "La forma de pago no es válida."
+            )
+
+        self.__forma_pago = valor
 
     @property
     def fecha(self) -> date:
@@ -73,7 +78,11 @@ class Pedido(Base, Calculable):
     def total(self) -> float:
         return self.__total
 
-    def agregar_detalle(self, cantidad: int, producto: Producto) -> None:
+    def agregar_detalle(
+        self,
+        cantidad: int,
+        producto
+    ) -> None:
 
         if self.__estado != Estado.PENDIENTE:
             raise OperacionNoPermitidaError(
@@ -85,12 +94,6 @@ class Pedido(Base, Calculable):
 
         if cantidad <= 0:
             raise DatoInvalidoError("La cantidad debe ser mayor que cero.")
-
-        if not isinstance(producto, Producto):
-            raise TypeError("El producto debe ser un objeto de tipo Producto.")
-
-        if producto.eliminado:
-            raise OperacionNoPermitidaError("No se puede agregar un producto eliminado.")
 
         if not producto.disponible:
             raise OperacionNoPermitidaError("El producto no está disponible.")
@@ -114,29 +117,29 @@ class Pedido(Base, Calculable):
         self.calcular_total()
 
 
-    def buscar_detalle_por_producto(self, producto: Producto) -> DetallePedido | None:
-        if not isinstance(producto, Producto):
-            raise TypeError("El producto debe ser un objeto de tipo Producto.")
+    def buscar_detalle_por_producto(
+        self,
+        producto
+    ) -> DetallePedido | None:
+
         for detalle in self.__detalles:
             if detalle.producto == producto:
                 return detalle
+
         return None
-    
-    def eliminar_detalle_por_producto(self, producto: Producto) -> None:
+
+    def eliminar_detalle_por_producto(self, producto) -> None:
         if self.__estado != Estado.PENDIENTE:
             raise OperacionNoPermitidaError(
                 "Solo se pueden modificar pedidos pendientes."
             )
-        if not isinstance(producto, Producto):
-            raise TypeError("El producto debe ser un objeto de tipo Producto.")
-        
+
         for detalle in self.__detalles:
             if detalle.producto == producto:
                 self.__detalles.remove(detalle)
                 producto.stock += detalle.cantidad
                 self.calcular_total()
                 return
-        raise EntidadNoEncontradaError("El producto no se encuentra en el pedido.")
 
     def cambiar_estado(self, nuevo_estado: Estado) -> None:
 

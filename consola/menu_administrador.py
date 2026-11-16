@@ -10,6 +10,10 @@ from entidades.producto import Producto
 from consola.menu import Menu
 from servicios.categoria_servicio import CategoriaServicio
 from servicios.producto_servicio import ProductoServicio
+from servicios.pedido_servicio import PedidoServicio
+from enums.estado import Estado
+from enums.forma_pago import FormaPago
+from entidades.pedido import Pedido
 from excepciones import FoodStoreError
 from consola.utilidades_consola import (
     limpiar_consola,
@@ -20,17 +24,24 @@ from consola.utilidades_consola import (
     mostrar_aviso,
     pausar
 )
+from servicios.usuario_servicio import UsuarioServicio
+
 
 class MenuAdministrador(Menu):
     def __init__(
         self,
         usuario: Usuario,
         categoria_servicio: CategoriaServicio,
-        producto_servicio: ProductoServicio
+        producto_servicio: ProductoServicio,
+        pedido_servicio: PedidoServicio,
+        usuario_servicio: UsuarioServicio
     ) -> None:
         super().__init__(usuario)
         self.__categoria_servicio: CategoriaServicio = categoria_servicio
         self.__producto_servicio: ProductoServicio = producto_servicio
+        self.__pedido_servicio: PedidoServicio = pedido_servicio
+        self.__usuario_servicio: UsuarioServicio = usuario_servicio
+
 
 
 # MENU PRINCIPAL
@@ -566,11 +577,183 @@ class MenuAdministrador(Menu):
 
 # GESTIÓN DE PEDIDOS
 
+
     def _menu_pedidos(self) -> None:
-        self._mostrar_submenu(
-            "PEDIDOS",
-            ["Listar", "Crear", "Actualizar", "Eliminar", "Volver"]
-        )
+        while True:
+            limpiar_consola()
+            mostrar_titulo("GESTIÓN DE PEDIDOS")
+
+            opciones: list[str] = [
+                "Listar",
+                "Crear",
+                "Actualizar",
+                "Eliminar",
+                "Volver"
+            ]
+
+            seleccion = mostrar_menu(
+                "Seleccioná una operación:",
+                opciones
+            )
+
+            match seleccion:
+                case "Listar":
+                    self._listar_pedidos()
+                case "Crear":
+                    self._crear_pedido()
+                case "Actualizar":
+                    mostrar_aviso("La opción Actualizar todavía no está implementada.")
+                    pausar()
+                case "Eliminar":
+                    mostrar_aviso("La opción Eliminar todavía no está implementada.")
+                    pausar()
+                case None | "Volver":
+                    break
+
+
+    def _listar_pedidos(self) -> None:
+        limpiar_consola()
+        mostrar_titulo("LISTADO DE PEDIDOS")
+
+        try:
+            pedidos = self.__pedido_servicio.listar_pedidos(
+                self._usuario
+            )
+
+            if not pedidos:
+                mostrar_aviso("No hay pedidos registrados.")
+            else:
+                for pedido in pedidos:
+                    print(
+                        f"\nID: {pedido.id}"
+                        f"\nCliente: {pedido.usuario.nombre} "
+                        f"{pedido.usuario.apellido}"
+                        f"\nEstado: {pedido.estado.name}"
+                        f"\nForma de pago: {pedido.forma_pago.name}"
+                        f"\nFecha: {pedido.fecha}"
+                        f"\nTotal: ${pedido.total:.2f}"
+                    )
+                    print("-" * 50)
+
+        except FoodStoreError as error:
+            mostrar_error(str(error))
+
+        pausar()
+
+
+    def _crear_pedido(self) -> None:
+        limpiar_consola()
+        mostrar_titulo("CREAR PEDIDO")
+
+        try:
+            # Seleccionar cliente
+            usuarios = self.__usuario_servicio.listar_usuarios()
+
+            if not usuarios:
+                mostrar_aviso("No hay usuarios registrados.")
+                pausar()
+                return
+
+            opciones_usuarios = [
+                f"{usuario.id} - {usuario.nombre} {usuario.apellido}"
+                for usuario in usuarios
+                if usuario.rol.name == "USUARIO"
+            ]
+
+            if not opciones_usuarios:
+                mostrar_aviso("No hay clientes disponibles.")
+                pausar()
+                return
+
+            cliente_seleccionado = questionary.select(
+                "Seleccioná el cliente:",
+                choices=opciones_usuarios
+            ).ask()
+
+            if cliente_seleccionado is None:
+                return
+
+            id_usuario = int(cliente_seleccionado.split(" - ")[0])
+
+            # Seleccionar productos
+            productos = self.__producto_servicio.listar_disponibles()
+
+            if not productos:
+                mostrar_aviso("No hay productos disponibles con stock.")
+                pausar()
+                return
+
+            detalles: list[tuple[int, int]] = []
+
+            while True:
+                opciones_productos = [
+                    f"{producto.id} - {producto.nombre} "
+                    f"(${producto.precio:.2f}) - Stock: {producto.stock}"
+                    for producto in productos
+                ]
+
+                producto_seleccionado = questionary.select(
+                    "Seleccioná un producto:",
+                    choices=opciones_productos + ["Finalizar selección"]
+                ).ask()
+
+                if producto_seleccionado is None:
+                    return
+
+                if producto_seleccionado == "Finalizar selección":
+                    break
+
+                id_producto = int(producto_seleccionado.split(" - ")[0])
+
+                cantidad_ingresada = questionary.text(
+                    "Ingresá la cantidad:"
+                ).ask()
+
+                if cantidad_ingresada is None:
+                    return
+
+                cantidad = int(cantidad_ingresada)
+
+                detalles.append((id_producto, cantidad))
+
+            if not detalles:
+                mostrar_aviso("El pedido debe tener al menos un producto.")
+                pausar()
+                return
+
+            # Seleccionar forma de pago
+            forma_pago_seleccionada = questionary.select(
+                "Seleccioná la forma de pago:",
+                choices=[
+                    f"{indice + 1} - {forma.name}"
+                    for indice, forma in enumerate(FormaPago)
+                ]
+            ).ask()
+
+            if forma_pago_seleccionada is None:
+                return
+
+            numero_forma_pago = int(forma_pago_seleccionada.split(" - ")[0])
+            forma_pago = list(FormaPago)[numero_forma_pago - 1]
+
+            # Crear pedido mediante el servicio
+            pedido = self.__pedido_servicio.crear_pedido(
+                usuario_sesion=self._usuario,
+                id_usuario=id_usuario,
+                forma_pago=forma_pago,
+                detalles=detalles
+            )
+
+            mostrar_exito(
+                f"Pedido creado correctamente. ID: {pedido.id}\n"
+                f"Total: ${pedido.total:.2f}"
+            )
+
+        except (FoodStoreError, TypeError, ValueError) as error:
+            mostrar_error(str(error))
+
+        pausar()
+   
 
 
 # SUBMENÚ PROVISIONAL

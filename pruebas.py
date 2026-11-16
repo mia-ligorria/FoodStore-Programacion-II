@@ -25,6 +25,7 @@ from excepciones import (
     OperacionNoPermitidaError
 )
 
+from servicios.pedido_servicio import PedidoServicio
 
 # ENTIDAD AUXILIAR PARA PROBAR BASE
 
@@ -474,6 +475,111 @@ try:
     )
 
 except CredencialesInvalidasError as error:
+    print("Error esperado:", error)
+
+
+
+# ==================================================
+# PRUEBAS DE PEDIDO SERVICIO
+# ==================================================
+
+print("\n=== PRUEBAS DE PEDIDO SERVICIO ===")
+
+servicio_pedidos = PedidoServicio(
+    usuario_servicio=servicio_usuarios,
+    producto_servicio=producto_servicio
+)
+
+# CREAR PEDIDO DESDE EL SERVICIO
+
+pedido_servicio = servicio_pedidos.crear_pedido(
+    usuario_sesion=admin_sesion,
+    id_usuario=usuario_login.id,
+    forma_pago=FormaPago.EFECTIVO,
+    detalles=[(producto.id, 2)]
+)
+
+print("Pedido creado:", pedido_servicio)
+print("Total:", pedido_servicio.total)
+print("Stock después de crear:", producto.stock)
+
+# LISTAR PEDIDOS DEL ADMINISTRADOR
+
+print("\nPedidos registrados:")
+
+for pedido_listado in servicio_pedidos.listar_pedidos(admin_sesion):
+    print(pedido_listado)
+
+# CONSULTAR PEDIDOS DEL CLIENTE
+
+print("\nPedidos del cliente:")
+
+for pedido_cliente in servicio_pedidos.listar_mis_pedidos(usuario_login):
+    print(pedido_cliente)
+
+# ACTUALIZAR FORMA DE PAGO Y ESTADO
+
+pedido_actualizado = servicio_pedidos.actualizar_pedido(
+    usuario_sesion=admin_sesion,
+    id_pedido=pedido_servicio.id,
+    nuevo_estado=Estado.CONFIRMADO,
+    nueva_forma_pago=FormaPago.TRANSFERENCIA
+)
+
+print("\nPedido actualizado:")
+print("Estado:", pedido_actualizado.estado)
+print("Forma de pago:", pedido_actualizado.forma_pago)
+
+# CANCELAR PEDIDO Y COMPROBAR DEVOLUCIÓN DE STOCK
+
+pedido_actualizado = servicio_pedidos.actualizar_pedido(
+    usuario_sesion=admin_sesion,
+    id_pedido=pedido_servicio.id,
+    nuevo_estado=Estado.CANCELADO
+)
+
+print("\nPedido cancelado:", pedido_actualizado.estado)
+print("Stock después de cancelar:", producto.stock)
+
+# ELIMINAR PEDIDO YA CANCELADO
+# El stock no debe devolverse una segunda vez.
+
+servicio_pedidos.eliminar_pedido(
+    usuario_sesion=admin_sesion,
+    id_pedido=pedido_servicio.id
+)
+
+print("¿Pedido eliminado?:", pedido_servicio.eliminado)
+print("Stock después de eliminar el cancelado:", producto.stock)
+
+# CREAR OTRO PEDIDO PENDIENTE PARA PROBAR LA ELIMINACIÓN
+
+pedido_pendiente = servicio_pedidos.crear_pedido(
+    usuario_sesion=admin_sesion,
+    id_usuario=usuario_login.id,
+    forma_pago=FormaPago.EFECTIVO,
+    detalles=[(producto.id, 1)]
+)
+
+print("\nSegundo pedido creado:", pedido_pendiente)
+print("Stock antes de eliminar:", producto.stock)
+
+servicio_pedidos.eliminar_pedido(
+    usuario_sesion=admin_sesion,
+    id_pedido=pedido_pendiente.id
+)
+
+print("¿Segundo pedido eliminado?:", pedido_pendiente.eliminado)
+print("Stock después de eliminar:", producto.stock)
+
+# CONSULTAR PEDIDO ELIMINADO: DEBE DAR ERROR
+
+try:
+    servicio_pedidos.buscar_por_id(
+        admin_sesion,
+        pedido_pendiente.id
+    )
+except EntidadNoEncontradaError as error:
     print("Error esperado:", error)
 
 
