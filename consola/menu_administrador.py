@@ -2,7 +2,6 @@
 # MENU ADMINISTRADOR - FOOD STORE
 # Programación II - UTN FRM
 # ==================================================
-
 import questionary
 from entidades.usuario import Usuario
 from entidades.categoria import Categoria
@@ -26,7 +25,6 @@ from consola.utilidades_consola import (
 )
 from servicios.usuario_servicio import UsuarioServicio
 
-
 class MenuAdministrador(Menu):
     def __init__(
         self,
@@ -43,9 +41,7 @@ class MenuAdministrador(Menu):
         self.__usuario_servicio: UsuarioServicio = usuario_servicio
 
 
-
 # MENU PRINCIPAL
-
     def mostrar(self) -> bool:
         while True:
             limpiar_consola()
@@ -138,9 +134,7 @@ class MenuAdministrador(Menu):
         try:
             categoria = Categoria(nombre, descripcion)
             self.__categoria_servicio.agregar(categoria)
-            mostrar_exito(
-                f"Categoría creada correctamente. ID: {categoria.id}"
-            )
+            mostrar_exito(f"Categoría creada correctamente. ID: {categoria.id}")
         except (FoodStoreError, TypeError, ValueError) as error:
             mostrar_error(str(error))
         pausar()
@@ -155,24 +149,18 @@ class MenuAdministrador(Menu):
             return
 
         self._listar_categorias_sin_pausar(categorias)
-        id_ingresado = questionary.text(
-            "Ingresá el ID de la categoría:"
-        ).ask()
+        id_ingresado = questionary.text("Ingresá el ID de la categoría:").ask()
         if id_ingresado is None:
             return
 
         try:
             id_categoria = int(id_ingresado)
-            categoria = self.__categoria_servicio.buscar_por_id(
-                id_categoria
-            )
+            categoria = self.__categoria_servicio.buscar_por_id(id_categoria)
             if categoria is None or categoria.eliminado:
                 mostrar_error("No se encontró una categoría con ese ID.")
                 pausar()
                 return
-            nuevo_nombre = questionary.text(
-                f"Nuevo nombre (actual: {categoria.nombre}):"
-            ).ask()
+            nuevo_nombre = questionary.text(f"Nuevo nombre (actual: {categoria.nombre}):").ask()
             if nuevo_nombre is None:
                 return
             nueva_descripcion = questionary.text(
@@ -241,7 +229,6 @@ class MenuAdministrador(Menu):
         self,
         categorias: list[Categoria]
     ) -> None:
-
         for categoria in categorias:
             print(
                 f"\nID: {categoria.id}"
@@ -264,12 +251,10 @@ class MenuAdministrador(Menu):
                 "Eliminar",
                 "Volver"
             ]
-
             seleccion = mostrar_menu(
                 "Seleccioná una operación:",
                 opciones
             )
-
             match seleccion:
                 case "Listar":
                     self._listar_productos()
@@ -291,14 +276,12 @@ class MenuAdministrador(Menu):
             mostrar_aviso("No hay productos registrados.")
         else:
             self._mostrar_productos_sin_pausar(productos)
-
         pausar()
 
     def _mostrar_productos_sin_pausar(
         self,
         productos: list[Producto]
     ) -> None:
-
         for producto in productos:
             print(
                 f"\nID: {producto.id}"
@@ -315,7 +298,6 @@ class MenuAdministrador(Menu):
     def _crear_producto(self) -> None:
         limpiar_consola()
         mostrar_titulo("CREAR PRODUCTO")
-
         nombre = questionary.text(
             "Ingresá el nombre:"
         ).ask()
@@ -368,13 +350,11 @@ class MenuAdministrador(Menu):
                 categoria=categoria
             )
             self.__producto_servicio.agregar(nuevo_producto)
-
             mostrar_exito(
                 f"Producto creado correctamente. ID: {nuevo_producto.id}"
             )
         except (FoodStoreError, TypeError, ValueError) as error:
             mostrar_error(str(error))
-
         pausar()
 
     def _editar_producto(self) -> None:
@@ -386,7 +366,6 @@ class MenuAdministrador(Menu):
             mostrar_aviso("No hay productos para editar.")
             pausar()
             return
-
         self._mostrar_productos_sin_pausar(productos)
 
         id_ingresado = questionary.text(
@@ -395,12 +374,9 @@ class MenuAdministrador(Menu):
 
         if id_ingresado is None:
             return
-
         try:
             id_producto = int(id_ingresado)
-            producto = self.__producto_servicio.buscar_por_id(
-                id_producto
-            )
+            producto = self.__producto_servicio.buscar_por_id(id_producto)
 
             if producto is None or producto.eliminado:
                 mostrar_error("No se encontró un producto con ese ID.")
@@ -413,9 +389,7 @@ class MenuAdministrador(Menu):
 
             if nuevo_nombre is None:
                 return
-            nueva_descripcion = questionary.text(
-                f"Descripción (actual: {producto.descripcion}):"
-            ).ask()
+            nueva_descripcion = questionary.text(f"Descripción (actual: {producto.descripcion}):").ask()
 
             if nueva_descripcion is None:
                 return
@@ -471,11 +445,9 @@ class MenuAdministrador(Menu):
                 nueva_disponibilidad,
                 nueva_categoria
             )
-
             mostrar_exito("Producto actualizado correctamente.")
         except (FoodStoreError, TypeError, ValueError) as error:
             mostrar_error(str(error))
-
         pausar()
 
     def _eliminar_producto(self) -> None:
@@ -518,7 +490,6 @@ class MenuAdministrador(Menu):
             mostrar_exito("Producto eliminado correctamente.")
         except (FoodStoreError, TypeError, ValueError) as error:
             mostrar_error(str(error))
-
         pausar()
 
 
@@ -528,7 +499,6 @@ class MenuAdministrador(Menu):
         self,
         categoria_actual: Categoria | None = None
     ) -> Categoria | None:
-
         categorias = self.__categoria_servicio.listar()
 
         if not categorias:
@@ -547,9 +517,7 @@ class MenuAdministrador(Menu):
             opciones.append("Mantener categoría actual")
 
         for categoria in categorias:
-            opciones.append(
-                f"{categoria.id} - {categoria.nombre}"
-            )
+            opciones.append(f"{categoria.id} - {categoria.nombre}")
 
         seleccion = questionary.select(
             "Seleccioná una categoría:",
@@ -580,11 +548,7 @@ class MenuAdministrador(Menu):
                 "Eliminar",
                 "Volver"
             ]
-
-            seleccion = mostrar_menu(
-                "Seleccioná una operación:",
-                opciones
-            )
+            seleccion = mostrar_menu("Seleccioná una operación:",opciones)
 
             match seleccion:
                 case "Listar":
@@ -598,15 +562,12 @@ class MenuAdministrador(Menu):
                 case None | "Volver":
                     break
 
-
-
     def _listar_usuarios(self) -> None:
         limpiar_consola()
         mostrar_titulo("LISTADO DE USUARIOS")
 
         try:
             usuarios = self.__usuario_servicio.listar_usuarios()
-
             if not usuarios:
                 mostrar_aviso("No hay usuarios registrados.")
             else:
@@ -619,16 +580,12 @@ class MenuAdministrador(Menu):
                         f"\nRol: {usuario.rol.name}"
                     )
                     print("-" * 50)
-
         except FoodStoreError as error:
             mostrar_error(str(error))
-
         pausar()
 
 
-    # ==============================================
-    # CREAR USUARIO
-    # ==============================================
+# CREAR USUARIO
 
     def _crear_usuario(self) -> None:
         limpiar_consola()
@@ -640,7 +597,6 @@ class MenuAdministrador(Menu):
             mail = input("Correo electrónico: ").strip()
             celular = input("Celular: ").strip()
             contrasenia = input("Contraseña: ").strip()
-
             print("\nSeleccioná el rol:")
             roles = ["ADMIN", "USUARIO"]
 
@@ -648,14 +604,12 @@ class MenuAdministrador(Menu):
                 "Rol del usuario:",
                 choices=roles
             ).ask()
-
             if seleccion_rol is None:
                 mostrar_aviso("Operación cancelada.")
                 pausar()
                 return
 
             from enums.rol import Rol
-
             rol = Rol[seleccion_rol]
 
             self.__usuario_servicio.crear_usuario(
@@ -666,21 +620,15 @@ class MenuAdministrador(Menu):
                 contrasenia=contrasenia,
                 rol=rol
             )
-
             mostrar_exito("Usuario creado correctamente.")
-
         except FoodStoreError as error:
             mostrar_error(str(error))
-
         except (ValueError, TypeError) as error:
             mostrar_error(str(error))
-
         pausar()
 
 
-    # ==============================================
-    # EDITAR USUARIO
-    # ==============================================
+# EDITAR USUARIO
 
     def _editar_usuario(self) -> None:
         limpiar_consola()
@@ -688,18 +636,14 @@ class MenuAdministrador(Menu):
 
         try:
             usuarios = self.__usuario_servicio.listar_usuarios()
-
             if not usuarios:
                 mostrar_aviso("No hay usuarios registrados.")
                 pausar()
                 return
-
             self._listar_usuarios()
 
             id_usuario = int(input("\nIngresá el ID del usuario a editar: "))
-
             usuario = self.__usuario_servicio.buscar_por_id(id_usuario)
-
             print("\nDejá vacío un campo si querés conservar el dato actual.")
 
             nombre = input(f"Nombre [{usuario.nombre}]: ").strip()
@@ -708,28 +652,22 @@ class MenuAdministrador(Menu):
             celular = input(f"Celular [{usuario.celular}]: ").strip()
 
             self.__usuario_servicio.editar_usuario(
-                usuario_sesion=self.__usuario,
+                usuario_sesion=self._usuario,
                 id_usuario=id_usuario,
                 nombre=nombre or usuario.nombre,
                 apellido=apellido or usuario.apellido,
                 mail=mail or usuario.mail,
                 celular=celular or usuario.celular
             )
-
             mostrar_exito("Usuario actualizado correctamente.")
-
         except ValueError:
             mostrar_error("El ID debe ser un número entero.")
-
         except FoodStoreError as error:
             mostrar_error(str(error))
-
         pausar()
 
 
-        # ==============================================
-    # ELIMINAR USUARIO
-    # ==============================================
+# ELIMINAR USUARIO
 
     def _eliminar_usuario(self) -> None:
         limpiar_consola()
@@ -737,18 +675,14 @@ class MenuAdministrador(Menu):
 
         try:
             usuarios = self.__usuario_servicio.listar_usuarios()
-
             if not usuarios:
                 mostrar_aviso("No hay usuarios registrados.")
                 pausar()
                 return
-
             self._listar_usuarios()
 
             id_usuario = int(input("\nIngresá el ID del usuario a eliminar: "))
-
             usuario = self.__usuario_servicio.buscar_por_id(id_usuario)
-
             confirmar = questionary.confirm(
                 f"¿Estás seguro de eliminar a {usuario.nombre} "
                 f"{usuario.apellido}?"
@@ -758,25 +692,19 @@ class MenuAdministrador(Menu):
                 mostrar_aviso("Operación cancelada.")
                 pausar()
                 return
-
             self.__usuario_servicio.eliminar_usuario(
-                usuario_sesion=self.__usuario,
+                usuario_sesion=self._usuario,
                 id_usuario=id_usuario
             )
-
             mostrar_exito("Usuario eliminado correctamente.")
-
         except ValueError:
             mostrar_error("El ID debe ser un número entero.")
-
         except FoodStoreError as error:
             mostrar_error(str(error))
-
         pausar()
 
 
 # GESTIÓN DE PEDIDOS
-
 
     def _menu_pedidos(self) -> None:
         while True:
@@ -790,12 +718,10 @@ class MenuAdministrador(Menu):
                 "Eliminar",
                 "Volver"
             ]
-
             seleccion = mostrar_menu(
                 "Seleccioná una operación:",
                 opciones
             )
-
             match seleccion:
                 case "Listar":
                     self._listar_pedidos()
@@ -808,7 +734,6 @@ class MenuAdministrador(Menu):
                 case None | "Volver":
                     break
 
-
     def _listar_pedidos(self) -> None:
         limpiar_consola()
         mostrar_titulo("LISTADO DE PEDIDOS")
@@ -817,7 +742,6 @@ class MenuAdministrador(Menu):
             pedidos = self.__pedido_servicio.listar_pedidos(
                 self._usuario
             )
-
             if not pedidos:
                 mostrar_aviso("No hay pedidos registrados.")
             else:
@@ -832,47 +756,36 @@ class MenuAdministrador(Menu):
                         f"\nTotal: ${pedido.total:.2f}"
                     )
                     print("-" * 50)
-
         except FoodStoreError as error:
             mostrar_error(str(error))
-
         pausar()
 
 
-        # ==============================================
-    # ACTUALIZAR PEDIDO
-    # ==============================================
+# ACTUALIZAR PEDIDO
 
     def _actualizar_pedido(self) -> None:
         limpiar_consola()
         mostrar_titulo("ACTUALIZAR PEDIDO")
-
         try:
             pedidos = self.__pedido_servicio.listar_pedidos(
-                self.__usuario
+                self._usuario
             )
-
             if not pedidos:
                 mostrar_aviso("No hay pedidos registrados.")
                 pausar()
                 return
-
             self._listar_pedidos()
-
             id_pedido = int(
                 input("\nIngresá el ID del pedido a actualizar: ")
             )
-
             pedido = self.__pedido_servicio.buscar_por_id(
-                self.__usuario,
+                self._usuario,
                 id_pedido
             )
-
             print(f"\nPedido seleccionado: {pedido.id}")
             print(f"Estado actual: {pedido.estado.name}")
             print(f"Forma de pago actual: {pedido.forma_pago.name}")
 
-            # Seleccionar nuevo estado
             nuevo_estado_nombre = questionary.select(
                 "Seleccioná el nuevo estado:",
                 choices=[estado.name for estado in Estado]
@@ -882,10 +795,8 @@ class MenuAdministrador(Menu):
                 mostrar_aviso("Operación cancelada.")
                 pausar()
                 return
-
             nuevo_estado = Estado[nuevo_estado_nombre]
 
-            # Seleccionar nueva forma de pago
             nueva_forma_pago_nombre = questionary.select(
                 "Seleccioná la nueva forma de pago:",
                 choices=[forma.name for forma in FormaPago]
@@ -895,30 +806,22 @@ class MenuAdministrador(Menu):
                 mostrar_aviso("Operación cancelada.")
                 pausar()
                 return
-
             nueva_forma_pago = FormaPago[nueva_forma_pago_nombre]
-
             self.__pedido_servicio.actualizar_pedido(
-                usuario_sesion=self.__usuario,
+                usuario_sesion=self._usuario,
                 id_pedido=id_pedido,
                 nuevo_estado=nuevo_estado,
                 nueva_forma_pago=nueva_forma_pago
             )
-
             mostrar_exito("Pedido actualizado correctamente.")
-
         except ValueError:
             mostrar_error("El ID debe ser un número entero.")
-
         except FoodStoreError as error:
             mostrar_error(str(error))
-
         pausar()
 
 
-        # ==============================================
-    # ELIMINAR PEDIDO
-    # ==============================================
+# ELIMINAR PEDIDO
 
     def _eliminar_pedido(self) -> None:
         limpiar_consola()
@@ -926,25 +829,20 @@ class MenuAdministrador(Menu):
 
         try:
             pedidos = self.__pedido_servicio.listar_pedidos(
-                self.__usuario
+                self._usuario
             )
-
             if not pedidos:
                 mostrar_aviso("No hay pedidos registrados.")
                 pausar()
                 return
-
             self._listar_pedidos()
-
             id_pedido = int(
                 input("\nIngresá el ID del pedido a eliminar: ")
             )
-
             pedido = self.__pedido_servicio.buscar_por_id(
-                self.__usuario,
+                self._usuario,
                 id_pedido
             )
-
             confirmar = questionary.confirm(
                 f"¿Estás seguro de eliminar el pedido {pedido.id}?"
             ).ask()
@@ -955,72 +853,54 @@ class MenuAdministrador(Menu):
                 return
 
             self.__pedido_servicio.eliminar_pedido(
-                usuario_sesion=self.__usuario,
+                usuario_sesion=self._usuario,
                 id_pedido=id_pedido
             )
-
             mostrar_exito("Pedido eliminado correctamente.")
-
         except ValueError:
             mostrar_error("El ID debe ser un número entero.")
-
         except FoodStoreError as error:
             mostrar_error(str(error))
-
         pausar()
-
 
     def _crear_pedido(self) -> None:
         limpiar_consola()
         mostrar_titulo("CREAR PEDIDO")
-
         try:
-            # Seleccionar cliente
             usuarios = self.__usuario_servicio.listar_usuarios()
-
             if not usuarios:
                 mostrar_aviso("No hay usuarios registrados.")
                 pausar()
                 return
-
             opciones_usuarios = [
                 f"{usuario.id} - {usuario.nombre} {usuario.apellido}"
                 for usuario in usuarios
                 if usuario.rol.name == "USUARIO"
             ]
-
             if not opciones_usuarios:
                 mostrar_aviso("No hay clientes disponibles.")
                 pausar()
                 return
-
             cliente_seleccionado = questionary.select(
                 "Seleccioná el cliente:",
                 choices=opciones_usuarios
             ).ask()
-
             if cliente_seleccionado is None:
                 return
-
             id_usuario = int(cliente_seleccionado.split(" - ")[0])
-
-            # Seleccionar productos
             productos = self.__producto_servicio.listar_disponibles()
 
             if not productos:
                 mostrar_aviso("No hay productos disponibles con stock.")
                 pausar()
                 return
-
             detalles: list[tuple[int, int]] = []
-
             while True:
                 opciones_productos = [
                     f"{producto.id} - {producto.nombre} "
                     f"(${producto.precio:.2f}) - Stock: {producto.stock}"
                     for producto in productos
                 ]
-
                 producto_seleccionado = questionary.select(
                     "Seleccioná un producto:",
                     choices=opciones_productos + ["Finalizar selección"]
@@ -1028,29 +908,22 @@ class MenuAdministrador(Menu):
 
                 if producto_seleccionado is None:
                     return
-
                 if producto_seleccionado == "Finalizar selección":
                     break
-
                 id_producto = int(producto_seleccionado.split(" - ")[0])
-
                 cantidad_ingresada = questionary.text(
                     "Ingresá la cantidad:"
                 ).ask()
 
                 if cantidad_ingresada is None:
                     return
-
                 cantidad = int(cantidad_ingresada)
-
                 detalles.append((id_producto, cantidad))
 
             if not detalles:
                 mostrar_aviso("El pedido debe tener al menos un producto.")
                 pausar()
                 return
-
-            # Seleccionar forma de pago
             forma_pago_seleccionada = questionary.select(
                 "Seleccioná la forma de pago:",
                 choices=[
@@ -1061,38 +934,29 @@ class MenuAdministrador(Menu):
 
             if forma_pago_seleccionada is None:
                 return
-
             numero_forma_pago = int(forma_pago_seleccionada.split(" - ")[0])
             forma_pago = list(FormaPago)[numero_forma_pago - 1]
-
-            # Crear pedido mediante el servicio
             pedido = self.__pedido_servicio.crear_pedido(
                 usuario_sesion=self._usuario,
                 id_usuario=id_usuario,
                 forma_pago=forma_pago,
                 detalles=detalles
             )
-
             mostrar_exito(
                 f"Pedido creado correctamente. ID: {pedido.id}\n"
                 f"Total: ${pedido.total:.2f}"
             )
-
         except (FoodStoreError, TypeError, ValueError) as error:
             mostrar_error(str(error))
-
         pausar()
-   
 
 
 # SUBMENÚ PROVISIONAL
-
     def _mostrar_submenu(
         self,
         titulo: str,
         opciones: list[str]
     ) -> None:
-
         while True:
             limpiar_consola()
             mostrar_titulo(titulo)
@@ -1100,7 +964,6 @@ class MenuAdministrador(Menu):
                 "Seleccioná una operación:",
                 opciones
             )
-
             if seleccion is None or seleccion == "Volver":
                 break
             mostrar_aviso(

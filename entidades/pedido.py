@@ -1,10 +1,10 @@
-
 from datetime import date
 
 from entidades.base import Base
 from entidades.calculable import Calculable
 from entidades.detalle_pedido import DetallePedido
 from entidades.usuario import Usuario
+from entidades.producto import Producto
 from enums.estado import Estado
 from enums.forma_pago import FormaPago
 from excepciones import (
@@ -38,12 +38,12 @@ class Pedido(Base, Calculable):
 
         super().__init__()
 
-        self.__usuario = usuario
-        self.__detalles = []
-        self.__estado = Estado.PENDIENTE
-        self.__forma_pago = forma_pago
-        self.__fecha = date.today()
-        self.__total = 0.0
+        self.__usuario: Usuario = usuario
+        self.__detalles: list[DetallePedido] = []
+        self.__estado: Estado = Estado.PENDIENTE
+        self.__forma_pago: FormaPago = forma_pago
+        self.__fecha: date = date.today()
+        self.__total: float = 0.0
 
     @property
     def usuario(self) -> Usuario:
@@ -81,7 +81,7 @@ class Pedido(Base, Calculable):
     def agregar_detalle(
         self,
         cantidad: int,
-        producto
+        producto: Producto
     ) -> None:
 
         if self.__estado != Estado.PENDIENTE:
@@ -89,17 +89,35 @@ class Pedido(Base, Calculable):
                 "Solo se pueden modificar pedidos pendientes."
             )
 
+        if not isinstance(producto, Producto):
+            raise DatoInvalidoError(
+                "Se debe proporcionar un producto válido."
+            )
+
+        if producto.eliminado:
+            raise OperacionNoPermitidaError(
+                "No se puede agregar un producto eliminado."
+            )
+
         if not isinstance(cantidad, int) or isinstance(cantidad, bool):
-            raise TypeError("La cantidad debe ser un número entero.")
+            raise TypeError(
+                "La cantidad debe ser un número entero."
+            )
 
         if cantidad <= 0:
-            raise DatoInvalidoError("La cantidad debe ser mayor que cero.")
+            raise DatoInvalidoError(
+                "La cantidad debe ser mayor que cero."
+            )
 
         if not producto.disponible:
-            raise OperacionNoPermitidaError("El producto no está disponible.")
+            raise OperacionNoPermitidaError(
+                "El producto no está disponible."
+            )
 
         if producto.stock < cantidad:
-            raise StockInsuficienteError("No hay stock suficiente.")
+            raise StockInsuficienteError(
+                "No hay stock suficiente."
+            )
 
         detalle_existente = self.buscar_detalle_por_producto(producto)
 
@@ -119,16 +137,19 @@ class Pedido(Base, Calculable):
 
     def buscar_detalle_por_producto(
         self,
-        producto
+        producto: Producto
     ) -> DetallePedido | None:
+        if not isinstance(producto, Producto):
+            raise DatoInvalidoError("Se debe proporcionar un producto válido.")
 
         for detalle in self.__detalles:
             if detalle.producto == producto:
                 return detalle
-
         return None
 
-    def eliminar_detalle_por_producto(self, producto) -> None:
+    def eliminar_detalle_por_producto(self, producto: Producto) -> None:
+        if not isinstance(producto, Producto):
+            raise DatoInvalidoError("Se debe proporcionar un producto válido.")
         if self.__estado != Estado.PENDIENTE:
             raise OperacionNoPermitidaError(
                 "Solo se pueden modificar pedidos pendientes."

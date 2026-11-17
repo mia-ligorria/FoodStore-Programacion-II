@@ -1,4 +1,3 @@
-
 # ==================================================
 # FOOD STORE - PROGRAMA PRINCIPAL
 # Programación II - UTN FRM
@@ -31,11 +30,9 @@ from consola.utilidades_consola import (
 def iniciar_sistema() -> None:
     """Inicializa los servicios y ejecuta el sistema."""
 
-    # Inicialización de servicios
     categoria_servicio = CategoriaServicio()
     producto_servicio = ProductoServicio(categoria_servicio)
     usuario_servicio = UsuarioServicio()
-
     pedido_servicio = PedidoServicio(
         usuario_servicio,
         producto_servicio
@@ -53,9 +50,7 @@ def iniciar_sistema() -> None:
 
     mostrar_exito("Sistema inicializado correctamente.")
 
-    # Bucle principal
     while True:
-
         limpiar_consola()
         mostrar_titulo("BIENVENIDO A FOOD STORE")
 
@@ -64,7 +59,6 @@ def iniciar_sistema() -> None:
         usuario = None
 
         while intentos < 3:
-
             mail = questionary.text(
                 "Ingresá tu mail:"
             ).ask()
@@ -101,14 +95,11 @@ def iniciar_sistema() -> None:
                     )
                     pausar()
 
-        # Si se agotaron los intentos
         if usuario is None:
             mostrar_error("Se agotaron los tres intentos de acceso.")
             return
 
-        # Selección del menú según el rol
         if usuario.rol == Rol.ADMIN:
-
             menu = MenuAdministrador(
                 usuario,
                 categoria_servicio,
@@ -118,7 +109,6 @@ def iniciar_sistema() -> None:
             )
 
         else:
-
             menu = MenuCliente(
                 usuario,
                 categoria_servicio,
@@ -126,16 +116,13 @@ def iniciar_sistema() -> None:
                 pedido_servicio
             )
 
-        # Ejecutar menú
         continuar = menu.mostrar()
 
-        # Si devuelve False, finalizar el programa
         if not continuar:
             limpiar_consola()
             mostrar_titulo("FOOD STORE")
             mostrar_aviso("Gracias por utilizar nuestro sistema.")
             return
-
 
 if __name__ == "__main__":
     iniciar_sistema()
