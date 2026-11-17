@@ -20,9 +20,11 @@ from servicios.producto_servicio import ProductoServicio
 from excepciones import (
     DuplicadoError, 
     DatoInvalidoError,
+    PrecioInvalidoError,
     EntidadNoEncontradaError,
     CredencialesInvalidasError,
-    OperacionNoPermitidaError
+    OperacionNoPermitidaError,
+    StockInsuficienteError
 )
 
 from servicios.pedido_servicio import PedidoServicio
@@ -595,6 +597,235 @@ try:
 except OperacionNoPermitidaError as e:
     print("Error esperado:", e)
 
-# FIN DE LAS PRUEBAS
 
+
+# ==================================================
+# PRUEBAS ADICIONALES
+# ==================================================
+
+print("\n=== PRUEBAS ADICIONALES ===")
+
+
+# 1. EDICIÓN DE CATEGORÍA
+
+print("\n--- Edición de categoría ---")
+
+categoria_servicio.editar(
+    categoria_almacen.id,
+    "Almacén y despensa",
+    "Productos de almacén y artículos de despensa"
+)
+
+print("Nombre actualizado:", categoria_almacen.nombre)
+print("Descripción actualizada:", categoria_almacen.descripcion)
+
+
+# 2. RECHAZAR EDICIÓN DE CATEGORÍA CON NOMBRE VACÍO
+
+print("\n--- Validación de categoría ---")
+
+try:
+    categoria_servicio.editar(
+        categoria_almacen.id,
+        "   ",
+        "Descripción válida"
+    )
+except DatoInvalidoError as error:
+    print("Error esperado:", error)
+
+
+# 3. RECHAZAR EDICIÓN DE PRODUCTO CON PRECIO NEGATIVO
+
+print("\n--- Validación de precio de producto ---")
+
+try:
+    producto_servicio.editar(
+        producto.id,
+        "Hamburguesa",
+        -500,
+        "Hamburguesa clásica",
+        10,
+        "hamburguesa.png",
+        True,
+        categoria
+    )
+except PrecioInvalidoError as error:
+    print("Error esperado:", error)
+
+
+# 4. BUSCAR Y EDITAR PRODUCTOS INEXISTENTES
+
+print("\n--- Producto inexistente ---")
+print(
+    "Resultado de búsqueda:",
+    producto_servicio.buscar_por_id(99999)
+)
+
+try:
+    producto_servicio.editar(
+        99999,
+        "Producto inexistente",
+        1000,
+        "Descripción",
+        5,
+        "producto.png",
+        True,
+        categoria
+    )
+except EntidadNoEncontradaError as error:
+    print("Error esperado:", error)
+
+
+# 5. LISTAR SOLAMENTE PRODUCTOS DISPONIBLES
+
+print("\n--- Productos disponibles ---")
+producto_sin_stock = Producto(
+    nombre="Gaseosa sin stock",
+    precio=2000,
+    descripcion="Gaseosa",
+    stock=0,
+    imagen="gaseosa.png",
+    disponible=True,
+    categoria=categoria_almacen
+)
+
+producto_no_disponible = Producto(
+    nombre="Jugo no disponible",
+    precio=1500,
+    descripcion="Jugo natural",
+    stock=5,
+    imagen="jugo.png",
+    disponible=False,
+    categoria=categoria_almacen
+)
+
+producto_servicio.agregar(producto_sin_stock)
+producto_servicio.agregar(producto_no_disponible)
+
+productos_disponibles = producto_servicio.listar_disponibles()
+
+for producto_disponible in productos_disponibles:
+    print(producto_disponible.nombre)
+
+print(
+    "¿Se excluyó el producto sin stock?:",
+    producto_sin_stock not in productos_disponibles
+)
+print(
+    "¿Se excluyó el producto no disponible?:",
+    producto_no_disponible not in productos_disponibles
+)
+
+# 6. NO PERMITIR CREAR PEDIDOS VACÍOS
+
+print("\n--- Pedido sin detalles ---")
+
+try:
+    servicio_pedidos.crear_pedido(
+        usuario_sesion=admin_sesion,
+        id_usuario=usuario_login.id,
+        forma_pago=FormaPago.EFECTIVO,
+        detalles=[]
+    )
+except DatoInvalidoError as error:
+    print("Error esperado:", error)
+
+# 7. RESTAURAR STOCK SI FALLA LA CREACIÓN DE UN PEDIDO
+
+print("\n--- Restauración de stock ante un error ---")
+stock_original = producto.stock
+try:
+    servicio_pedidos.crear_pedido(
+        usuario_sesion=admin_sesion,
+        id_usuario=usuario_login.id,
+        forma_pago=FormaPago.EFECTIVO,
+        detalles=[
+            (producto.id, 2),
+            (producto.id, stock_original)
+        ]
+    )
+except StockInsuficienteError as error:
+    print("Error esperado:", error)
+print("Stock original:", stock_original)
+print("Stock después del error:", producto.stock)
+
+
+# 8. ELIMINAR UN DETALLE Y RESTAURAR EL STOCK
+
+print("\n--- Eliminación de detalle de pedido ---")
+
+pedido_detalle = Pedido(
+    usuario_login,
+    FormaPago.EFECTIVO
+)
+
+stock_antes = producto.stock
+pedido_detalle.agregar_detalle(2, producto)
+print("Stock después de agregar:", producto.stock)
+
+pedido_detalle.eliminar_detalle_por_producto(producto)
+
+print("Cantidad de detalles restantes:", len(pedido_detalle.detalles))
+print("Stock después de eliminar el detalle:", producto.stock)
+print("Stock original:", stock_antes)
+
+
+# 9. COMPLETAR UN PEDIDO CONFIRMADO
+
+print("\n--- Transición de pedido a terminado ---")
+pedido_finalizado = Pedido(
+    usuario_login,
+    FormaPago.EFECTIVO
+)
+pedido_finalizado.agregar_detalle(1, producto)
+pedido_finalizado.cambiar_estado(Estado.CONFIRMADO)
+pedido_finalizado.cambiar_estado(Estado.TERMINADO)
+
+print("Estado final:", pedido_finalizado.estado)
+
+
+# 10. RECHAZAR MODIFICACIONES EN UN PEDIDO TERMINADO
+
+print("\n--- Modificación de pedido terminado ---")
+try:
+    pedido_finalizado.agregar_detalle(1, producto)
+except OperacionNoPermitidaError as error:
+    print("Error esperado:", error)
+
+
+# 11. IMPEDIR QUE UN CLIENTE CONSULTE EL PEDIDO DE OTRO
+
+print("\n--- Privacidad de pedidos entre clientes ---")
+otro_cliente = servicio_usuarios.crear_usuario(
+    nombre="Pedro",
+    apellido="Gomez",
+    mail="pedro@gmail.com",
+    celular="2994666666",
+    contrasenia="pedro123",
+    rol=Rol.USUARIO
+)
+pedido_otro_cliente = servicio_pedidos.crear_pedido(
+    usuario_sesion=admin_sesion,
+    id_usuario=otro_cliente.id,
+    forma_pago=FormaPago.EFECTIVO,
+    detalles=[(producto.id, 1)]
+)
+try:
+    servicio_pedidos.buscar_mi_pedido(
+        usuario_login,
+        pedido_otro_cliente.id
+    )
+except EntidadNoEncontradaError as error:
+    print("Error esperado:", error)
+
+
+# 12. IMPEDIR QUE UN CLIENTE REALICE OPERACIONES ADMINISTRATIVAS
+print("\n--- Validación de permisos ---")
+try:
+    servicio_pedidos.listar_pedidos(usuario_login)
+except OperacionNoPermitidaError as error:
+    print("Error esperado:", error)
+
+
+# FIN DE LAS PRUEBAS
 print("\n=== FIN DE LAS PRUEBAS ===")

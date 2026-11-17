@@ -55,7 +55,7 @@ python main.py
 
 ## Documentación y entrega
 
-- **Informe PDF:** `Informe_FoodStore_Programacion_II.pdf`
+- **Informe PDF:** `Informe_FoodStore_Prog_II.pdf`
 - **Video de presentación:** [Agregar enlace público]
 - **Repositorio:** [Agregar enlace al repositorio]
 
