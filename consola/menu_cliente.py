@@ -1,4 +1,3 @@
-
 # ==================================================
 # MENU CLIENTE - FOOD STORE
 # Programación II - UTN FRM
@@ -39,12 +38,11 @@ class MenuCliente(Menu):
         self.__producto_servicio = producto_servicio
         self.__pedido_servicio = pedido_servicio
 
-    # ==============================================
-    # MENU PRINCIPAL
-    # ==============================================
+# ==============================================
+# MENU PRINCIPAL
+# ==============================================
 
     def mostrar(self) -> bool:
-
         while True:
             limpiar_consola()
 
@@ -68,34 +66,26 @@ class MenuCliente(Menu):
             )
 
             match seleccion:
-
                 case "Ver categorías":
                     self._ver_categorias()
-
                 case "Ver productos disponibles":
                     self._ver_productos()
-
                 case "Mis pedidos":
                     self._ver_mis_pedidos()
-
                 case "Mis datos":
                     self._ver_mis_datos()
-
                 case "Cerrar sesión":
                     return True
-
                 case "Salir":
                     return False
-
                 case None:
                     return True
 
-    # ==============================================
-    # CONSULTAR CATEGORÍAS
-    # ==============================================
+# ==============================================
+# CONSULTAR CATEGORÍAS
+# ==============================================
 
     def _ver_categorias(self) -> None:
-
         limpiar_consola()
         mostrar_titulo("CATEGORÍAS DISPONIBLES")
 
@@ -114,12 +104,11 @@ class MenuCliente(Menu):
 
         pausar()
 
-    # ==============================================
-    # CONSULTAR PRODUCTOS
-    # ==============================================
+# ==============================================
+# CONSULTAR PRODUCTOS
+# ==============================================
 
     def _ver_productos(self) -> None:
-
         limpiar_consola()
         mostrar_titulo("PRODUCTOS DISPONIBLES")
 
@@ -138,15 +127,13 @@ class MenuCliente(Menu):
                     f"\nCategoría: {producto.categoria.nombre}"
                 )
                 print("-" * 50)
-
         pausar()
 
-    # ==============================================
-    # CONSULTAR MIS PEDIDOS
-    # ==============================================
+# ==============================================
+# CONSULTAR MIS PEDIDOS
+# ==============================================
 
     def _ver_mis_pedidos(self) -> None:
-
         limpiar_consola()
         mostrar_titulo("MIS PEDIDOS")
 
@@ -158,38 +145,53 @@ class MenuCliente(Menu):
             if not pedidos:
                 mostrar_aviso("Todavía no tenés pedidos registrados.")
             else:
+                print("\nTus pedidos registrados:\n")
                 for pedido in pedidos:
                     print(
-                        f"\nID: {pedido.id}"
-                        f"\nFecha: {pedido.fecha}"
-                        f"\nEstado: {pedido.estado.name}"
-                        f"\nForma de pago: {pedido.forma_pago.name}"
-                        f"\nTotal: ${pedido.total:.2f}"
+                        f"ID: {pedido.id}"
+                        f"| Fecha: {pedido.fecha}"
+                        f"| Estado: {pedido.estado.name}"
+                        f"| Total: ${pedido.total:.2f}"
                     )
+                print("-" * 50)
+                id_pedido = int(
+                    input("\nIngresá el ID del pedido que querés consultar: ")
+                )
 
-                    print("\nProductos:")
+                pedido = self.__pedido_servicio.buscar_mi_pedido(
+                    self._usuario,
+                    id_pedido
+                )
 
-                    for detalle in pedido.detalles:
-                        print(
-                            f"  - {detalle.producto.nombre}"
-                            f" | Cantidad: {detalle.cantidad}"
-                            f" | Subtotal: ${detalle.subtotal:.2f}"
-                        )
+                print("\nDETALLE DEL PEDIDO")
+                print(f"ID: {pedido.id}")
+                print(f"Fecha: {pedido.fecha}")
+                print(f"Estado: {pedido.estado.name}")
+                print(f"Forma de pago: {pedido.forma_pago.name}")
+                print(f"Total: ${pedido.total:.2f}")
+                print("\nProductos:")
 
-                    print("-" * 50)
+                for detalle in pedido.detalles:
+                    print(
+                        f"- {detalle.producto.nombre}"
+                        f"| Cantidad: {detalle.cantidad}"
+                        f"| Subtotal: ${detalle.subtotal:.2f}"
+                    )
+                print("-" * 50)
 
+        except ValueError:
+            mostrar_error("El ID debe ser un número entero.")
         except FoodStoreError as error:
             mostrar_error(str(error))
-
         pausar()
 
 
-    # ==============================================
-    # CONSULTAR MIS DATOS
-    # ==============================================
+
+# ==============================================
+# CONSULTAR MIS DATOS
+# ==============================================
 
     def _ver_mis_datos(self) -> None:
-
         limpiar_consola()
         mostrar_titulo("MIS DATOS")
 
@@ -200,5 +202,4 @@ class MenuCliente(Menu):
         print(f"Rol: {self._usuario.rol.name}")
 
         print("-" * 50)
-
         pausar()

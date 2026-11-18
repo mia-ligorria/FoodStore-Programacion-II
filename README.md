@@ -1,88 +1,68 @@
-# FoodStore-Programacion-II
-Trabajo Práctico Integrador - Programación II
+# FoodStore – Sistema de Gestión de Pedidos
 
+**Trabajo Práctico Integrador | Programación II**
 
-FoodStore – Sistema de Gestión de Pedidos
+## Descripción
 
-Descripción
+FoodStore es una aplicación de consola desarrollada en Python para gestionar categorías, productos, usuarios y pedidos de un comercio de alimentos.
 
-FoodStore es una aplicación de consola desarrollada en Python para gestionar productos, categorías, usuarios y pedidos de un comercio de alimentos.
+El sistema cuenta con dos roles de acceso: **administrador**, con permisos de gestión, y **cliente**, con acceso a funcionalidades de consulta.
 
-El sistema permite operar con dos tipos de usuarios: administrador y cliente, cada uno con diferentes permisos y funcionalidades.
+## Funcionalidades principales
 
-Tecnologías utilizadas
+**Administrador**
+- Gestión de categorías, productos y usuarios.
+- Consulta, actualización y eliminación de pedidos.
 
-Python 3.12 o superior.
+**Cliente**
+- Consulta de categorías y productos disponibles.
+- Consulta de sus propios pedidos y detalles.
+- Consulta de sus datos personales.
 
-Programación Orientada a Objetos (POO).
+## Tecnologías y conceptos utilizados
 
-Colecciones en memoria.
+- Python 3.12 o superior.
+- Programación Orientada a Objetos (POO).
+- Colecciones en memoria.
 
-Questionary.
+## Requisitos
 
-Colorama.
+- Python 3.12 o superior.
+- Dependencias del proyecto: Questionary y Colorama.
 
-Funcionalidades principales
+## Instalación y ejecución
 
-Administrador
+1. Clonar el repositorio.
+2. Abrir una terminal en la carpeta del proyecto.
+3. Instalar las dependencias:
 
-Gestionar categorías: listar, crear, editar y eliminar.
-
-Gestionar productos: listar, crear, editar y eliminar.
-
-Gestionar usuarios: listar, crear, editar y eliminar.
-
-Gestionar pedidos: listar, actualizar y eliminar.
-
-Cliente
-
-Consultar categorías.
-
-Consultar productos disponibles.
-
-Consultar sus propios pedidos.
-
-Consultar sus datos personales.
-
-Requisitos
-
-Tener instalado Python 3.12 o superior.
-
-Instalar las dependencias del proyecto.
-
-Instalación y ejecución
-
-Clonar el repositorio.
-
-Abrir una terminal en la carpeta del proyecto.
-
-Instalar las dependencias:
-
+```bash
 pip install questionary colorama
+```
 
-Ejecutar el programa:
+4. Ejecutar la aplicación:
 
+```bash
 python main.py
+```
 
-Usuario administrador inicial
+## Acceso inicial
 
-Correo: admin@foodstore.com
+**Usuario administrador**
 
-Contraseña: admin123
+- Correo: `admin@foodstore.com`
+- Contraseña: `admin123`
 
-Documentación
+## Documentación y entrega
 
-Informe del Trabajo Práctico Integrador: Informe_FoodStore_Programacion_II.pdf
+- **Informe PDF:** `Informe_FoodStore_Prog_II.pdf`
+- **Video de presentación:** [Agregar enlace público]
+- **Repositorio:** [Agregar enlace al repositorio]
 
-Video de presentación: [Agregar enlace al video]
+## Autoras
 
-Repositorio: [Agregar enlace al repositorio]
+- Mia Analuz Ligorria
+- Romina Paola Castro
 
-Autoras
-
-Romina Paola Castro
-
-Mia Ligorria
-
-Trabajo Práctico Integrador – Programación II
-Tecnicatura Universitaria en Programación – UTN Facultad Regional Mendoza.
+**Tecnicatura Universitaria en Programación**  
+**UTN – Facultad Regional Mendoza**  

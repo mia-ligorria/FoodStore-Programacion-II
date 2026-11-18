@@ -43,7 +43,7 @@ class Usuario(Base):
             raise TypeError("El nombre debe ser un texto.")
         if not valor.strip():
             raise DatoInvalidoError("El nombre no puede estar vacío.")
-        self.__nombre = valor.strip()
+        self.__nombre = valor.strip().title()
 
     @property
     def apellido(self) -> str:
@@ -55,7 +55,7 @@ class Usuario(Base):
             raise TypeError("El apellido debe ser un texto.")
         if not valor.strip():
             raise DatoInvalidoError("El apellido no puede estar vacío.")
-        self.__apellido = valor.strip()
+        self.__apellido = valor.strip().title()
 
     @property
     def mail(self) -> str:

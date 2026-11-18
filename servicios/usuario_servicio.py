@@ -18,6 +18,19 @@ class UsuarioServicio:
     def __init__(self) -> None:
         self.__usuarios: list[Usuario] = []
 
+
+    def __validar_administrador(
+        self,
+        usuario_sesion: Usuario
+    ) -> None:
+
+        if not isinstance(usuario_sesion, Usuario):
+            raise DatoInvalidoError("El usuario de sesión no es válido.")
+        if usuario_sesion.eliminado:
+            raise OperacionNoPermitidaError("Un usuario eliminado no puede realizar operaciones.")
+        if usuario_sesion.rol != Rol.ADMIN:
+            raise OperacionNoPermitidaError("No tenés permisos para realizar esta operación.")
+
     def crear_usuario(
         self,
         nombre: str,
@@ -99,15 +112,7 @@ class UsuarioServicio:
         celular: str
     ) -> Usuario:
 
-        if usuario_sesion.rol != Rol.ADMIN:
-            raise OperacionNoPermitidaError(
-                "No tenés permisos para editar usuarios."
-            )
-
-        if usuario_sesion.eliminado:
-            raise OperacionNoPermitidaError(
-                "Un usuario eliminado no puede realizar operaciones."
-            )
+        self.__validar_administrador(usuario_sesion)
         
         if not isinstance(nombre, str) or not isinstance(apellido, str):
             raise TypeError("El nombre y el apellido deben ser textos.")
