@@ -56,8 +56,8 @@ python main.py
 ## Documentación y entrega
 
 - **Informe PDF:** `Informe_FoodStore_Prog_II.pdf`
-- **Video de presentación:** [Agregar enlace público]
-- **Repositorio:** [Agregar enlace al repositorio]
+- **Video de presentación:** https://canva.link/ulop0u3n4o172sy
+- **Repositorio:** https://github.com/mia-ligorria/FoodStore-Programacion-II.git
 
 ## Autoras
 
